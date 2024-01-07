@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="stylesheet" href="style.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@300&family=Cinzel+Decorative&family=DotGothic16&family=Fauna+One&family=Nova+Square&family=Pixelify+Sans&family=Redacted+Script&family=Supermercado+One&family=Audiowide&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<script src="scripts.js"></script>
+<script src="jquery.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+</head>
+<body>
+<div id="snackbar">You don't have enough memes to buy this item.</div>
+<div class="topnav">
+<a class="active" href="index.html">Game</a>
+<div class="topnav right">
+<a class="settings" onclick="open_settings()" style="width:auto;"><i class="fa fa-fw fa-gear"></i></a>
+<a class="login" onclick="open_login()" style="width:auto;">Login</a>
+</div>
+</div>
+<h1 style="font-size: 60px;">Game Idle</h1>
+<hr>
+<button class="button red" onclick="add_one()">Generate Meme</button>
+<div style="display: flex">
+<h2>Memes: </h2>
+<h2 id="add_one">0</h2>
+</div>	
+<div style="display: flex">
+<h2>MPS (Memes per Second):</h2>
+<h2 id="mps">0</h2>
+</div>
+<div style="display: flex">
+<h2>MPC (Memes per Click):</h2>
+<h2 id="mpc">1</h2>
+</div>
+<hr>
+<h1>Activites</h1>
+<div style="display: flex" class="container">
+<button class="button">Chat</button>
+<button class="button">Gamble</button>
+<button class="button">Save</button>
+<button class="button" onclick="dark_mode()">Dark Mode</button>
+</div>
+<hr>
+<h1>Other</h1>
+<div style="display: flex" class="container">
+<button class="button">Leaderboard</button>
+<button class="button">People List</button>
+</div>
+<hr>
+<h1>Shop</h1>
+<div style="display: flex">
+	<h2>Potato Computer&nbsp|&nbsp</h2>
+	<h2>+1 MPS&nbsp|&nbsp</h2>
+	<h2>+1 MPC&nbsp|&nbsp</h2>
+	<h2>Cost:&nbsp</h2>
+	<h2 id="potato_cost">100</h2>
+	<h2>&nbspMemes&nbsp|&nbsp</h2>
+	<h2>You Own:</h2>
+	<h2 id="potato_count">0</h2>
+	<h2>&nbsp</h2>
+	<button class="buy" onclick="buy_potato()">Buy</button>
+</div>
+<div style="display: flex">
+	<h2>Imgflip Meme Generator&nbsp|&nbsp</h2>
+	<h2>+10 MPS&nbsp|&nbsp</h2>
+	<h2>+5 MPC&nbsp|&nbsp</h2>
+	<h2>Cost: 500 Memes&nbsp|&nbsp</h2>
+	<h2>You Own:</h2>
+	<h2 id="meme-generator-count">0</h2>
+	<h2>&nbsp</h2>
+	<button class="buy" onclick="buy_meme_generator()">Buy</button>
+</div>
+<div style="display: flex">
+	<h2>Skill Boost&nbsp|&nbsp</h2>
+	<h2>+100 MPS&nbsp|&nbsp</h2>
+	<h2>+50 MPC&nbsp|&nbsp</h2>
+	<h2>Cost: 1000 Memes&nbsp|&nbsp</h2>
+	<h2>You Own:</h2>
+	<h2 id="skillboost-count">0</h2>
+	<h2>&nbsp</h2>
+	<button class="buy" onclick="buy_skillboost()">Buy</button>
+</div>
+<div style="display: flex">
+	<h2>Discord Basement&nbsp|&nbsp</h2>
+	<h2>+1000 MPS&nbsp|&nbsp</h2>
+	<h2>+100 MPC&nbsp|&nbsp</h2>
+	<h2>Cost: 10000 Memes&nbsp|&nbsp</h2>
+	<h2>You Own:</h2>
+	<h2 id="discordbasement-count">0</h2>
+	<h2>&nbsp</h2>
+	<button class="buy" onclick="buy_discordbasement()">Buy</button>
+</div>
+<div style="display: flex">
+	<h2>God PC?!?!?&nbsp|&nbsp</h2>
+	<h2>+10000 MPS&nbsp|&nbsp</h2>
+	<h2>+2500 MPC&nbsp|&nbsp</h2>
+	<h2>Cost: 100000 Memes&nbsp|&nbsp</h2>
+	<h2>You Own:</h2>
+	<h2 id="godpc-count">0</h2>
+	<h2>&nbsp</h2>
+	<button class="buy" onclick="buy_godpc()">Buy</button>
+</div>
+
+<div id="user-login" class="login-style">
+<form action="accounts.php" method="post" class="modal-content animate">
+    <span onclick="cancel_login()" class="close">&times;</span>
+	<div class="login">
+		<label for="uname"><b>Username</b></label>
+		<input type="text" placeholder="Enter Username" name="uname" required>
+		<label for="passw"><b>Password</b></label>
+		<input type="password" placeholder="Enter Username" name="passw" required>
+		<button type="submit" class="login_button">Login</button>
+		<button type="button" onclick="cancel_login()" class="cancelbtn">Cancel</button>
+		<span class="signup"><a>Sign-up</a></span>
+	</div>
+</form>
+<script>outside_click()</script>
+</div>
+
+<div id="settings-menu" class="settings-menu">
+	<form action="" class="cursor-menu">
+		<label for="cursors">Custom Cursor:</label>
+		<select name="cursors" id="cursors">
+  		<option value="none">None</option>
+		<optgroup label="Default">
+  		<option value="crosshair">Crosshair</option>
+  		<option value="cell">Cell</option>
+		<option value="text">Text Highlighter</option>
+		</optgroup>
+		<optgroup label="Hands">
+		<option value="hand">Hand</option>
+		<option value="pointer">Pointer</option>
+		<option value="fist">Fist</option>
+		</optgroup>
+		<optgroup label="Arrows">
+		<option value="compass">All Cardinal Directions</option>
+		<option value="left-right">Left-Right</option>
+		<option value="up-down">Up-Down</option>
+		<option value="sw-ne">Southwest-Northeast</option>
+		<option value="nw-se">Northwest-Southeast</option>
+		</optgroup>
+		<optgroup label="Misc.">
+		<option value="loading">Loading</option>
+		<option value="magnify">Magnifying Glass</option>
+		<option value="vertical-text">Vertical Text Highlighter</option>
+		<option value="ball">Ball</option>
+		</optgroup>
+		<option value="invisible">Cursors, who needs cursors?</option>
+		</select>
+	</form>
+</div>
+
+</body>
+</html>
