@@ -275,4 +275,8 @@ span.passw {
   z-index: 1;
   padding: 16px;
   top: 0;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
 }
