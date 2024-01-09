@@ -40,8 +40,20 @@ button:hover {
   color: white;
   cursor: pointer;
 }
+.x-button {
+  height: 30px;
+  width: 30px;
+  color: red;
+  position: absolute;
+  right: 10px;
+  top: 10px;
+}
+.x-button:hover {
+  color: crimson;
+}
 .cinzel {
   font-family: "Cinzel Decorative";
+  position: relative;
 }
 .container {
 	display: grid;

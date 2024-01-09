@@ -57,3 +57,7 @@ function open_settings() {
 	document.getElementById("settings-menu").style.display="block";
 	document.getElementById("overlay").style.display="block";
 }
+function close_settings() {
+	document.getElementById("settings-menu").style.display="none";
+	document.getElementById("overlay").style.display="none";
+}
