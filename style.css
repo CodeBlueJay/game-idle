@@ -24,7 +24,6 @@ a {
 button {
   color: blue;
   display: inline-block;
-  font-size: 16px;
   padding: 5px 5px;
   border-radius: 10px;
   transition-duration: 0.4s;
@@ -87,9 +86,27 @@ button:hover {
 .buy:hover {
   background-color: forestgreen;
 }
+.settings-menu {
+  display: none;
+  background-color: white;
+  border-radius: 12px;
+  z-index: 2;
+  padding: 16px;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  box-shadow: 10px 10px 12px black;
+}
 .dark-mode {
   background-color: black;
   color: white;
+}
+.dark-settings {
+  color: white;
+  background-color: black;
+  box-shadow: 10px 10px 12px black;
+  transition-duration: 0.4s;
 }
 .topnav {
   overflow: hidden;
@@ -281,20 +298,6 @@ span.passw {
   from {bottom: 30px; opacity: 1;}
   to {bottom: 0; opacity: 0;}
 }
-
-.settings-menu {
-  display: none;
-  background-color: white;
-  border-radius: 12px;
-  z-index: 2;
-  padding: 16px;
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  box-shadow: 10px 10px 12px;
-}
-
 #overlay {
   position: fixed;
   display: none;

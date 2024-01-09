@@ -9,8 +9,6 @@
 <script src="scripts.js"></script>
 <script src="jquery.js"></script>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-<link rel="icon" type="image/x-icon" href="favicon.ico">
-<title>Game Idle</title>
 </head>
 <body>
 <div id="overlay"></div>
@@ -42,8 +40,6 @@
 <div style="display: flex" class="container">
 <button class="button">Chat</button>
 <button class="button">Gamble</button>
-<button class="button">Save</button>
-<button class="button" onclick="dark_mode()">Dark Mode</button>
 </div>
 <hr>
 <h1>Other</h1>
@@ -125,6 +121,12 @@
 <div id="settings-menu" class="settings-menu">
 	<h2 class="cinzel" style="text-align: center;">Settings</h2>
 	<svg onclick="close_settings()" class="x-button" xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256"><path fill="currentColor" d="M208.49 191.51a12 12 0 0 1-17 17L128 145l-63.51 63.49a12 12 0 0 1-17-17L111 128L47.51 64.49a12 12 0 0 1 17-17L128 111l63.51-63.52a12 12 0 0 1 17 17L145 128Z"/></svg>
+	<hr>
+	<div class="container" style="display: flex;">
+		<button class="button">Save</button>
+		<button class="button" onclick="dark_mode()">Dark Mode</button>
+	</div>
+	<hr>
 	<form action="" class="cursor-menu">
 		<label for="cursors">Custom Cursor:</label>
 		<select name="cursors" id="cursors">

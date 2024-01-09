@@ -15,8 +15,10 @@ function add_one() {
 	document.getElementById("add_one").innerText = memes;
 }
 function dark_mode() {
-   var element = document.body;
-   element.classList.toggle("dark-mode");
+   	var element = document.body;
+   	element.classList.toggle("dark-mode");
+	var element = document.getElementById("settings-menu");
+	element.classList.toggle("dark-settings")
 }
 function snackbar() {
   var x = document.getElementById("snackbar");
