@@ -19,6 +19,8 @@ function dark_mode() {
    	element.classList.toggle("dark-mode");
 	var element = document.getElementById("settings-menu");
 	element.classList.toggle("dark-settings")
+	var element = document.getElementById("user-login");
+	element.classList.toggle("dark-login")
 }
 function snackbar() {
   var x = document.getElementById("snackbar");
@@ -42,10 +44,12 @@ function buy_potato() {
 	}
 }
 function open_login() {
-	document.getElementById('user-login').style.display='block'
+	document.getElementById('user-login').style.display='block';
+	document.getElementById("overlay").style.display="block";
 }
 function cancel_login() {
-	document.getElementById('user-login').style.display='none'
+	document.getElementById('user-login').style.display='none';
+	document.getElementById("overlay").style.display="none";
 }
 function outside_click() {
 	var modal = document.getElementById('user-login');

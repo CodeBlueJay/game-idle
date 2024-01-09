@@ -103,16 +103,18 @@
 </div>
 
 <div id="user-login" class="login-style">
-<form action="accounts.php" method="post" class="modal-content animate">
-    <span onclick="cancel_login()" class="close">&times;</span>
+<form action="accounts.php" method="post" class="modal-content">
+    <svg onclick="cancel_login()" class="close" xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256"><path fill="currentColor" d="M208.49 191.51a12 12 0 0 1-17 17L128 145l-63.51 63.49a12 12 0 0 1-17-17L111 128L47.51 64.49a12 12 0 0 1 17-17L128 111l63.51-63.52a12 12 0 0 1 17 17L145 128Z"/></svg>
 	<div class="login">
 		<label for="uname"><b>Username</b></label>
 		<input type="text" placeholder="Enter Username" name="uname" required>
 		<label for="passw"><b>Password</b></label>
 		<input type="password" placeholder="Enter Username" name="passw" required>
-		<button type="submit" class="login_button">Login</button>
-		<button type="button" onclick="cancel_login()" class="cancelbtn">Cancel</button>
-		<span class="signup"><a>Sign-up</a></span>
+		<div style="gap: 10px;" class="signup-buttons">
+			<button type="submit" class="login_button">Login</button>
+			<button type="button" onclick="cancel_login()" class="cancelbtn">Cancel</button>
+			<button type="button" class="signup">Create Account</button>
+		</div>
 	</div>
 </form>
 <script>outside_click()</script>
