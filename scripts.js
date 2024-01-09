@@ -54,5 +54,6 @@ function outside_click() {
 	}
 }
 function open_settings() {
-	document.getElementById("settings-menu").style.display="block"
+	document.getElementById("settings-menu").style.display="block";
+	document.getElementById("overlay").style.display="block";
 }
