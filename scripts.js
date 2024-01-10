@@ -67,3 +67,14 @@ function close_settings() {
 	document.getElementById("settings-menu").style.display="none";
 	document.getElementById("overlay").style.display="none";
 }
+function save_changes() {
+	var x = document.getElementById("savechanges");
+  	x.className = "show";
+  	setTimeout(function(){ x.className = x.className.replace("show", ""); }, 3000);
+}
+function start_buttons() {
+	document.getElementById("meme-generator").disabled = true;
+	document.getElementById("skill-boost").disabled = true;
+	document.getElementById("discord-basement").disabled = true;
+	document.getElementById("god-pc").disabled = true;
+}

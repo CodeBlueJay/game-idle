@@ -9,11 +9,13 @@
 <script src="scripts.js"></script>
 <script src="jquery.js"></script>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-<title>Game Idle</title>
+<link rel="icon" type="image/x-icon" href="favicon.png">
 </head>
 <body>
 <div id="overlay"></div>
 <div id="snackbar">You don't have enough memes to buy this item.</div>
+<div id="savechanges">Changes Saved!</div>
+<script>start_buttons()</script>
 <div class="topnav">
 <a class="active" href="index.html">Game</a>
 <div class="topnav right">
@@ -70,7 +72,7 @@
 	<h2>You Own:</h2>
 	<h2 id="meme-generator-count">0</h2>
 	<h2>&nbsp</h2>
-	<button class="buy" onclick="buy_meme_generator()">Buy</button>
+	<button class="buy" onclick="buy_meme_generator()" id="meme-generator">Buy</button>
 </div>
 <div style="display: flex">
 	<h2>Skill Boost&nbsp|&nbsp</h2>
@@ -80,7 +82,7 @@
 	<h2>You Own:</h2>
 	<h2 id="skillboost-count">0</h2>
 	<h2>&nbsp</h2>
-	<button class="buy" onclick="buy_skillboost()">Buy</button>
+	<button class="buy" onclick="buy_skillboost()" id="skill-boost">Buy</button>
 </div>
 <div style="display: flex">
 	<h2>Discord Basement&nbsp|&nbsp</h2>
@@ -90,7 +92,7 @@
 	<h2>You Own:</h2>
 	<h2 id="discordbasement-count">0</h2>
 	<h2>&nbsp</h2>
-	<button class="buy" onclick="buy_discordbasement()">Buy</button>
+	<button class="buy" onclick="buy_discordbasement()" id="discord-basement">Buy</button>
 </div>
 <div style="display: flex">
 	<h2>God PC?!?!?&nbsp|&nbsp</h2>
@@ -100,7 +102,7 @@
 	<h2>You Own:</h2>
 	<h2 id="godpc-count">0</h2>
 	<h2>&nbsp</h2>
-	<button class="buy" onclick="buy_godpc()">Buy</button>
+	<button class="buy" onclick="buy_godpc()" id="god-pc">Buy</button>
 </div>
 
 <div id="user-login" class="login-style">
@@ -160,6 +162,8 @@
 		<option value="invisible">Cursors, who needs cursors?</option>
 		</select>
 	</form>
+	<br>
+	<button class="save" onclick="save_changes()">Save Changes</button>
 </div>
 
 </body>
