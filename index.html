@@ -9,9 +9,9 @@
 <script src="scripts.js"></script>
 <script src="jquery.js"></script>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-<link rel="icon" type="image/x-icon" href="favicon.png">
+<link rel="icon" type="image/x-icon" href="favicon.ico">
 </head>
-<body>
+<body id="game-body">
 <div id="overlay"></div>
 <div id="snackbar">You don't have enough memes to buy this item.</div>
 <div id="savechanges">Changes Saved!</div>
@@ -28,7 +28,7 @@
 <button class="button red" onclick="add_one()">Generate Meme</button>
 <div style="display: flex">
 <h2>Memes: </h2>
-<h2 id="add_one">0</h2>
+<h2 id="total_memes">0</h2>
 </div>	
 <div style="display: flex">
 <h2>MPS (Memes per Second):</h2>
@@ -68,9 +68,11 @@
 	<h2>Imgflip Meme Generator&nbsp|&nbsp</h2>
 	<h2>+10 MPS&nbsp|&nbsp</h2>
 	<h2>+5 MPC&nbsp|&nbsp</h2>
-	<h2>Cost: 500 Memes&nbsp|&nbsp</h2>
+	<h2>Cost:&nbsp</h2>
+	<h2 id="meme_cost">1000</h2>
+	<h2>&nbspMemes&nbsp|&nbsp</h2>
 	<h2>You Own:</h2>
-	<h2 id="meme-generator-count">0</h2>
+	<h2 id="meme_count">0</h2>
 	<h2>&nbsp</h2>
 	<button class="buy" onclick="buy_meme_generator()" id="meme-generator">Buy</button>
 </div>
@@ -78,31 +80,49 @@
 	<h2>Skill Boost&nbsp|&nbsp</h2>
 	<h2>+100 MPS&nbsp|&nbsp</h2>
 	<h2>+50 MPC&nbsp|&nbsp</h2>
-	<h2>Cost: 1000 Memes&nbsp|&nbsp</h2>
+	<h2>Cost:&nbsp</h2>
+	<h2 id="skill_cost">10000</h2>
+	<h2>&nbspMemes&nbsp|&nbsp</h2>
 	<h2>You Own:</h2>
-	<h2 id="skillboost-count">0</h2>
+	<h2 id="skill_count">0</h2>
 	<h2>&nbsp</h2>
 	<button class="buy" onclick="buy_skillboost()" id="skill-boost">Buy</button>
 </div>
 <div style="display: flex">
 	<h2>Discord Basement&nbsp|&nbsp</h2>
-	<h2>+1000 MPS&nbsp|&nbsp</h2>
+	<h2>+1K MPS&nbsp|&nbsp</h2>
 	<h2>+100 MPC&nbsp|&nbsp</h2>
-	<h2>Cost: 10000 Memes&nbsp|&nbsp</h2>
+	<h2>Cost:&nbsp</h2>
+	<h2 id="discord_cost">100000</h2>
+	<h2>&nbspMemes&nbsp|&nbsp</h2>
 	<h2>You Own:</h2>
-	<h2 id="discordbasement-count">0</h2>
+	<h2 id="discord_count">0</h2>
 	<h2>&nbsp</h2>
 	<button class="buy" onclick="buy_discordbasement()" id="discord-basement">Buy</button>
 </div>
 <div style="display: flex">
 	<h2>God PC?!?!?&nbsp|&nbsp</h2>
-	<h2>+10000 MPS&nbsp|&nbsp</h2>
-	<h2>+2500 MPC&nbsp|&nbsp</h2>
-	<h2>Cost: 100000 Memes&nbsp|&nbsp</h2>
+	<h2>+10K MPS&nbsp|&nbsp</h2>
+	<h2>+500 MPC&nbsp|&nbsp</h2>
+	<h2>Cost:&nbsp</h2>
+	<h2 id="pc_cost">1M</h2>
+	<h2>&nbspMemes&nbsp|&nbsp</h2>
 	<h2>You Own:</h2>
-	<h2 id="godpc-count">0</h2>
+	<h2 id="pc_count">0</h2>
 	<h2>&nbsp</h2>
 	<button class="buy" onclick="buy_godpc()" id="god-pc">Buy</button>
+</div>
+<div style="display: flex" class="limp">
+	<h2>L.I.M.P: License in Meme-ing People&nbsp|&nbsp</h2>
+	<h2>+100K MPS&nbsp|&nbsp</h2>
+	<h2>+1K MPC&nbsp|&nbsp</h2>
+	<h2>Cost:&nbsp</h2>
+	<h2 id="limp_cost">10M</h2>
+	<h2>&nbspMemes&nbsp|&nbsp</h2>
+	<h2>You Own:</h2>
+	<h2 id="limp_count">0</h2>
+	<h2>&nbsp</h2>
+	<button class="buy" onclick="buy_limp()" id="limp">Buy</button>
 </div>
 
 <div id="user-login" class="login-style">
@@ -128,13 +148,14 @@
 	<svg onclick="close_settings()" class="x-button" xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256"><path fill="currentColor" d="M208.49 191.51a12 12 0 0 1-17 17L128 145l-63.51 63.49a12 12 0 0 1-17-17L111 128L47.51 64.49a12 12 0 0 1 17-17L128 111l63.51-63.52a12 12 0 0 1 17 17L145 128Z"/></svg>
 	<hr>
 	<div class="container" style="display: flex;">
-		<button class="button">Save</button>
+		<button class="button" onclick="saveGame()">Save</button>
 		<button class="button" onclick="dark_mode()">Dark Mode</button>
+		<button class="button" onclick="confirmWipeSave()">Wipe Save Data</button>
 	</div>
 	<hr>
 	<form action="" class="cursor-menu">
 		<label for="cursors">Custom Cursor:</label>
-		<select name="cursors" id="cursors">
+		<select name="cursors" id="cursors" onchange="changeCursor()">
   		<option value="none">None</option>
 		<optgroup label="Default">
   		<option value="crosshair">Crosshair</option>
@@ -163,7 +184,17 @@
 		</select>
 	</form>
 	<br>
-	<button class="save" onclick="save_changes()">Save Changes</button>
+	<button class="save" onclick="save_changes(); saveGame(); close_settings();">Save Changes</button>
+</div>
+
+<div id="confirmation-overlay" class="confirmation-overlay"></div>
+<div id="confirmation-popup" class="confirmation-popup">
+    <div class="popup-content">
+        <svg class="close-popup" onclick="closeConfirmationPopup()" xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256"><path fill="currentColor" d="M208.49 191.51a12 12 0 0 1-17 17L128 145l-63.51 63.49a12 12 0 0 1-17-17L111 128L47.51 64.49a12 12 0 0 1 17-17L128 111l63.51-63.52a12 12 0 0 1 17 17L145 128Z"/></svg>
+        <p>Are you sure you want to wipe your save data? This action cannot be undone.</p>
+        <button class="button" onclick="wipeSaveData()">Yes, Wipe Data</button>
+        <button class="cancelbtn" onclick="closeConfirmationPopup()">Cancel</button>
+    </div>
 </div>
 
 </body>
