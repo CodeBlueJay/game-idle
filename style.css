@@ -1,390 +1,701 @@
+/* ============================================================
+   Game Idle — design tokens
+   A "meme economy" aesthetic: deep indigo-black surfaces,
+   a violet/pink duotone accent, monospace numerals for the
+   counters (stock-ticker energy for something you're farming),
+   and tiered shop cards whose accent color intensifies as you
+   climb the power curve.
+   ============================================================ */
+:root {
+  --bg: #100e1a;
+  --surface: #1a1826;
+  --surface-2: #221f33;
+  --border: #322f49;
+  --text: #edebf7;
+  --text-dim: #948fb0;
+  --accent: #8b6cff;
+  --accent-2: #ff4fa0;
+  --accent-gradient: linear-gradient(135deg, #8b6cff, #ff4fa0);
+  --success: #34d399;
+  --success-dim: #1f8f6c;
+  --danger: #f87171;
+  --warning: #fbbf24;
+  --radius: 14px;
+  --radius-sm: 8px;
+  --shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.6);
+}
+
+* {
+  box-sizing: border-box;
+}
+
 body {
-  transition-duration: 0.4s;
-  background-color: white;
+  margin: 0;
+  padding: 24px 16px 80px;
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Inter", sans-serif;
   cursor: default;
+  transition: background-color 0.4s, color 0.4s;
+  min-height: 100vh;
 }
+
+/* Site defaults to the dark "meme economy" theme above.
+   .dark-mode is toggled by the existing Dark Mode / Light Mode button in
+   scripts.js — kept as the class name for compatibility, but it now flips
+   the palette to a light variant rather than assuming a light default. */
+body.dark-mode {
+  --bg: #f4f1ff;
+  --surface: #ffffff;
+  --surface-2: #f2eeff;
+  --border: #ddd2fb;
+  --text: #1c1730;
+  --text-dim: #6e6690;
+}
+
+h1, h2, h3 {
+  font-family: "Space Grotesk", sans-serif;
+  font-weight: 700;
+  margin: 0;
+}
+
 h1 {
-  font-family: "Cinzel Decorative";
   text-align: center;
+  letter-spacing: -0.02em;
+  background: var(--accent-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  margin: 8px 0 28px;
 }
-h3 {
-  font-family: "DotGothic16";
+
+p, div {
+  font-family: "Inter", sans-serif;
 }
-p {
-  font-family: "Nova Square";
-}
-h2 {
-	font-family: "Nova Square"
-}
-div {
-	font-family: "Nova Square"
-}
+
 a {
-  font-family: "Fauna One";
+  font-family: "Inter", sans-serif;
 }
-button {
-  color: blue;
-  display: inline-block;
-  padding: 5px 5px;
-  border-radius: 10px;
-  transition-duration: 0.4s;
-  border: 2px solid blue;
-	font-size: 25px;
-	text-align: center;
-  position: relative;
-  background-color: transparent;
+
+hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  max-width: 720px;
+  margin: 28px auto;
 }
-button:hover {
-  background-color: blue;
-  color: white;
-  cursor: pointer;
+
+/* --- Layout shell --- */
+.topnav,
+h1,
+.generate-wrap,
+.stats-row,
+h1 + hr,
+.container,
+.shop-grid,
+#user-login,
+.settings-menu,
+#chat-panel,
+#leaderboard-panel {
+  max-width: 720px;
+  margin-left: auto;
+  margin-right: auto;
 }
-.x-button {
-  height: 30px;
-  width: 30px;
-  color: red;
-  position: absolute;
-  right: 10px;
-  top: 10px;
-}
-.x-button:hover {
-  color: crimson;
-}
-.cinzel {
-  font-family: "Cinzel Decorative";
-  position: relative;
-}
-.container {
-	display: grid;
-	gap: 10px;
-	align-items: center;
-	justify-content: center;
-}
-.red {
-  color: white;
-  background-color: red;
-  transition-duration: 0.4s;
-  width: 100%;
-  font-family: "Audiowide";
-  font-size: 30px;
-  border: transparent;
-  border-radius: 50px;
-}
-.red:hover {
-  color: white;
-  background-color: #ff6666;
-}
-.buy {
-  color: white;
-  background-color: mediumseagreen;
-  border-radius: 10px;
-  border: 0px;
-  height: 50px;
-  width: 100px;
-  transition-duration: 0.4s;
-}
-.buy:hover {
-  background-color: forestgreen;
-}
-.settings-menu {
-  display: none;
-  background-color: white;
-  border-radius: 12px;
-  z-index: 2;
-  padding: 16px;
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  box-shadow: 10px 10px 12px black;
-}
-.dark-mode {
-  background-color: black;
-  color: white;
-}
-.dark-settings {
-  color: white;
-  background-color: black;
-  box-shadow: 10px 10px 12px black;
-  transition-duration: 0.4s;
-}
+
+/* --- Top nav --- */
 .topnav {
-  overflow: hidden;
-  background-color: #333333;
-  border-radius: 10px;
-}
-
-.topnav a {
-  float: left;
-  color: #2684FC;
-  background-color: transparent;
-  text-align: center;
-  padding: 14px 16px;
-  text-decoration: none;
-  font-size: 17px;
-  border-radius: 10px;
-}
-
-.topnav a:hover {
-  background-color: transparent;
-  color: #2684FC;
-  border: 2px solid #2684FC;
-  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(26, 24, 38, 0.7);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 6px;
 }
 
 .topnav a.active {
-  background-color: #2684FC;
-  color: white;
-  border: 2px solid #2684FC;
-}
-.topnav .right {
-  float: right;
-}
-.topnav .login {
-  float: right;
-  color: gold;
-  background-color: transparent;
-  text-align: center;
-  padding: 5px 16px;
+  font-family: "Space Grotesk", sans-serif;
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--text);
+  background: var(--surface-2);
   text-decoration: none;
-  font-size: 17px;
-  border-radius: 10px;
-  border: 2px solid gold;
-  transition-duration: 0.4s;
-  margin-top: 8px;
-  margin-right: 8px;
+  padding: 10px 20px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
 }
-.topnav .login:hover {
-  background-color: gold;
-  color: #333333;
-  border-color: transparent;
+
+.topnav .right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
+
 .topnav .settings {
-  color: white;
-  background-color: transparent;
-  text-align: center;
-  font-size: 24px;
+  color: var(--text-dim);
+  background: transparent;
+  border: 1px solid var(--border);
   border-radius: 50%;
-  transition-duration: 0.4s;
-  margin-right: 10px;
-  border: 2px solid white;
-  padding: 5px 5px;
-  margin-top: 4px;
-  margin-left: 10px;
+  width: 38px;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  transition: 0.2s;
+  margin: 0;
+  padding: 0;
 }
+
 .topnav .settings:hover {
-  color: white;
-  border-radius: 10px;
-  border: 2px solid white;
+  color: var(--text);
+  border-color: var(--accent);
+  cursor: pointer;
 }
-.content {
-  padding: 16px;
+
+.topnav .login {
+  color: var(--accent-2);
+  background: transparent;
+  border: 1px solid var(--accent-2);
+  padding: 9px 18px;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 999px;
+  text-decoration: none;
+  transition: 0.2s;
+  margin: 0;
 }
-.sticky {
+
+.topnav .login:hover {
+  background: var(--accent-2);
+  color: #1a0d15;
+  cursor: pointer;
+}
+
+/* --- Hero / generate button --- */
+.generate-wrap {
+  text-align: center;
+}
+
+button.red {
+  width: 100%;
+  max-width: 420px;
+  color: #1a0d15;
+  background: var(--accent-gradient);
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  border: none;
+  border-radius: 999px;
+  padding: 20px;
+  box-shadow: 0 12px 30px -8px rgba(139, 108, 255, 0.55);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+button.red:hover {
+  transform: translateY(-2px) scale(1.01);
+  box-shadow: 0 16px 36px -8px rgba(255, 79, 160, 0.55);
+  cursor: pointer;
+  background: var(--accent-gradient);
+  color: #1a0d15;
+}
+
+button.red:active {
+  transform: translateY(0) scale(0.99);
+}
+
+/* --- Stat readout (the "ticker") --- */
+.stats-row {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+
+.stat-card {
+  flex: 1;
+  min-width: 140px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 18px;
+  text-align: left;
+}
+
+.stat-card .stat-label {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+  font-weight: 500;
+  margin-bottom: 6px;
+  display: block;
+}
+
+.stat-card .stat-value {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 26px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+
+.stat-card.primary .stat-value {
+  background: var(--accent-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: 0 0 24px rgba(139, 108, 255, 0.35);
+}
+
+/* Section labels (Activities / Other / Shop) */
+h1.section {
+  font-size: 20px;
+  text-align: left;
+  max-width: 720px;
+  margin: 0 auto 14px;
+  background: none;
+  -webkit-text-fill-color: var(--text-dim);
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* --- Activity / Other button rows --- */
+.container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+}
+
+.container .button {
+  width: 100%;
+}
+
+button.button {
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 14px;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 16px;
+  font-weight: 500;
+  transition: 0.2s;
+}
+
+button.button:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: var(--surface-2);
+  color: var(--text);
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* --- Shop --- */
+.shop-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.shop-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--tier-color, var(--border));
+  border-radius: var(--radius);
+  padding: 14px 18px;
+  transition: border-color 0.2s, transform 0.15s;
+}
+
+.shop-item:hover {
+  transform: translateX(2px);
+}
+
+.shop-item .item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.shop-item .item-name {
+  font-family: "Space Grotesk", sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  margin-bottom: 4px;
+}
+
+.shop-item .item-stats {
+  font-size: 13px;
+  color: var(--text-dim);
+  font-family: "JetBrains Mono", monospace;
+}
+
+.shop-item .item-cost {
+  text-align: right;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 13px;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+
+.shop-item .item-cost b {
+  color: var(--text);
+  font-size: 15px;
+}
+
+.shop-item .item-owned {
+  text-align: right;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 12px;
+  color: var(--text-dim);
+  white-space: nowrap;
+  min-width: 70px;
+}
+
+button.buy {
+  color: #06231a;
+  background: var(--success);
+  border: none;
+  border-radius: var(--radius-sm);
+  height: 44px;
+  width: 84px;
+  font-family: "Space Grotesk", sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  transition: 0.2s;
+  flex-shrink: 0;
+}
+
+button.buy:hover {
+  background: #5eead4;
+  cursor: pointer;
+}
+
+button.buy:disabled {
+  background: var(--surface-2);
+  color: var(--text-dim);
+}
+
+/* --- Overlays / modals --- */
+#overlay {
   position: fixed;
-  top: 0;
-  width: 100%;
+  display: none;
+  inset: 0;
+  z-index: 1;
+  background: rgba(8, 6, 16, 0.7);
+  backdrop-filter: blur(2px);
 }
-.sticky + .content {
-  padding-top: 60px;
-}
-input[type=text], input[type=password] {
-  width: 100%;
-  padding: 12px 20px;
-  margin: 8px 0;
-  display: inline-block;
-  border: 1px solid #ccc;
-  box-sizing: border-box;
-}
-.login_button {
-  width: auto;
-  border: transparent;
-  color: white;
-  background-color: green;
-}
-.login_button:hover {
-  background-color: greenyellow;
-}
-.cancelbtn {
-  width: auto;
-  background-color: #f44336;
-  color: white;
-  border: transparent;
-}
-.cancelbtn:hover {
-  background-color: tomato;
-}
-span.passw {
-  float: right;
-  padding-top: 16px;
-}
+
+.settings-menu,
 .login-style {
   display: none;
-  background-color: white;
-  position: fixed;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
   z-index: 2;
-  top: 0;
-  border-radius: 12px;
-  padding: 16px;
+  padding: 24px;
+  position: fixed;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  box-shadow: 10px 10px 12px black;
-}
-.dark-login {
-  color: white;
-  background-color: black;
-  box-shadow: 10px 10px 12px black;
-  transition-duration: 0.4s;
-}
-.close {
-  color: red;
-  height: 25px;
-  width: auto;
-  float: right;
-  position: absolute;
-  right: 10px;
-  top: 10px;
+  box-shadow: var(--shadow);
+  width: min(420px, 90vw);
+  color: var(--text);
 }
 
-.close:hover {
-  color: crimson;
+.settings-menu h2,
+.login-style h2 {
+  text-align: center;
+  margin-bottom: 16px;
 }
-#snackbar {
+
+.settings-menu .container {
+  margin-bottom: 8px;
+}
+
+.cursor-menu label {
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+.cursor-menu select {
+  width: 100%;
+  margin-top: 6px;
+  background: var(--surface-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px;
+  font-family: "Inter", sans-serif;
+}
+
+/* .dark-settings / .dark-login classes are still toggled by scripts.js
+   for backward compatibility, but the settings/login modals already pull
+   from the same CSS variables as the rest of the page, so no separate
+   override rules are needed here. */
+
+input[type=text], input[type=password], input[type=email] {
+  width: 100%;
+  padding: 12px 14px;
+  margin: 6px 0 14px;
+  display: inline-block;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-family: "Inter", sans-serif;
+  box-sizing: border-box;
+}
+
+input::placeholder {
+  color: var(--text-dim);
+}
+
+label {
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+.login {
+  text-align: left;
+}
+
+.signup-buttons {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.login_button {
+  background: var(--success);
+  color: #06231a;
+  border: none;
+  font-family: "Space Grotesk", sans-serif;
+  font-weight: 700;
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+  flex: 1;
+}
+
+.login_button:hover {
+  background: #5eead4;
+  cursor: pointer;
+}
+
+.cancelbtn {
+  background: transparent;
+  color: var(--text-dim);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+}
+
+.cancelbtn:hover {
+  border-color: var(--danger);
+  color: var(--danger);
+  cursor: pointer;
+}
+
+.signup {
+  background: transparent;
+  color: var(--accent-2);
+  border: 1px solid var(--accent-2);
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+  float: none;
+}
+
+.signup:hover {
+  background: var(--accent-2);
+  color: #1a0d15;
+  cursor: pointer;
+}
+
+.close, .x-button, .close-popup {
+  color: var(--text-dim);
+  height: 22px;
+  width: 22px;
+  position: absolute;
+  right: 14px;
+  top: 14px;
+  transition: 0.2s;
+}
+
+.close:hover, .x-button:hover, .close-popup:hover {
+  color: var(--danger);
+  cursor: pointer;
+}
+
+.save {
+  color: var(--warning);
+  background: transparent;
+  border: 1px solid var(--warning);
+  width: 100%;
+  margin-top: 8px;
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  font-family: "Space Grotesk", sans-serif;
+  font-weight: 700;
+}
+
+.save:hover {
+  background: var(--warning);
+  color: #1a0d15;
+  cursor: pointer;
+}
+
+/* --- Chat --- */
+#chat-messages {
+  height: 260px;
+  overflow-y: auto;
+  text-align: left;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  margin-bottom: 12px;
+  font-size: 14px;
+}
+
+#chat-messages div {
+  margin-bottom: 6px;
+  line-height: 1.4;
+}
+
+#chat-messages b {
+  color: var(--accent-2);
+}
+
+#chat-input {
+  margin: 0 !important;
+  flex: 1;
+}
+
+/* --- Leaderboard --- */
+#leaderboard-list div {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 14px;
+}
+
+#leaderboard-list div:last-child {
+  border-bottom: none;
+}
+
+/* --- Toasts --- */
+#snackbar, #savechanges {
   visibility: hidden;
   min-width: 250px;
   margin-left: -125px;
-  background-color: #333;
-  color: #fff;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text);
   text-align: center;
-  border-radius: 10px;
-  padding: 16px;
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
   position: fixed;
   z-index: 1;
   left: 50%;
   bottom: 30px;
+  font-family: "Inter", sans-serif;
+  box-shadow: var(--shadow);
 }
-#snackbar.show {
+
+#snackbar.show, #savechanges.show {
   visibility: visible;
-  -webkit-animation: fadein 0.5s, fadeout 0.5s 2.5s;
-  animation: fadein 0.5s, fadeout 0.5s 2.5s;
-}
-@-webkit-keyframes fadein {
-  from {bottom: 0; opacity: 0;}
-  to {bottom: 30px; opacity: 1;}
+  animation: fadein 0.4s, fadeout 0.4s 2.6s;
 }
 
 @keyframes fadein {
-  from {bottom: 0; opacity: 0;}
-  to {bottom: 30px; opacity: 1;}
-}
-
-@-webkit-keyframes fadeout {
-  from {bottom: 30px; opacity: 1;}
-  to {bottom: 0; opacity: 0;}
+  from { bottom: 0; opacity: 0; }
+  to { bottom: 30px; opacity: 1; }
 }
 
 @keyframes fadeout {
-  from {bottom: 30px; opacity: 1;}
-  to {bottom: 0; opacity: 0;}
-}
-#overlay {
-  position: fixed;
-  display: none;
-  width: 100%;
-  height: 100%;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 1;
-  background-color: rgba(0,0,0,0.5)
-}
-.signup {
-  float: right;
-  color: #C26401;
-  border: 2px solid #C26401;
-  background-color: transparent;
-}
-.signup:hover {
-  color: white;
-  background-color: #C26401;
+  from { bottom: 30px; opacity: 1; }
+  to { bottom: 0; opacity: 0; }
 }
 
+/* --- Confirmation popup --- */
+.confirmation-popup {
+  display: none;
+  position: fixed;
+  z-index: 3;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 24px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  width: min(360px, 90vw);
+  color: var(--text);
+}
+
+.popup-content {
+  text-align: center;
+}
+
+.popup-content .button {
+  margin: 6px;
+}
+
+.confirmation-popup p {
+  margin-bottom: 20px;
+  color: var(--text-dim);
+}
+
+/* --- Scrollbars --- */
 ::-webkit-scrollbar {
   width: 10px;
 }
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 12px;
-  box-shadow: inset 0 0 2px black;
+  background: var(--surface);
 }
 ::-webkit-scrollbar-thumb {
-  background: gray;
+  background: var(--surface-2);
+  border: 2px solid var(--border);
   border-radius: 12px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: black;
-}
-.save {
-  color: orange;
-  border: 2px solid orange;
-}
-.save:hover {
-  background-color: orange;
-}
-#savechanges {
-  visibility: hidden;
-  min-width: 250px;
-  margin-left: -125px;
-  background-color: #333;
-  color: #fff;
-  text-align: center;
-  border-radius: 10px;
-  padding: 16px;
-  position: fixed;
-  z-index: 1;
-  left: 50%;
-  bottom: 30px;
-}
-#savechanges.show {
-  visibility: visible;
-  -webkit-animation: fadein 0.5s, fadeout 0.5s 2.5s;
-  animation: fadein 0.5s, fadeout 0.5s 2.5s;
-}
-/* Add these styles at the end of your CSS */
-.confirmation-popup {
-    display: none;
-    position: fixed;
-    z-index: 3;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    background-color: #fefefe;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 10px 10px 12px black;
+  background: var(--accent);
 }
 
-.popup-content {
-    text-align: center;
+/* --- Responsive --- */
+@media (max-width: 600px) {
+  .shop-item {
+    flex-wrap: wrap;
+  }
+  .shop-item .item-cost,
+  .shop-item .item-owned {
+    text-align: left;
+  }
 }
 
-.close-popup {
-    color: red;
-    float: right;
-    width: 30px;
-    height: 30px;
-    cursor: pointer;
+/* --- Reduced motion --- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
 }
 
-.close-popup:hover {
-    color: crimson;
-}
-
-.confirmation-popup p {
-    margin-bottom: 20px;
-}
-.limp {
-  font-size: 15px;
+/* --- Keyboard focus visibility --- */
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
