@@ -6,8 +6,8 @@
 //   3. scripts.js
 // ============================================================
 
-const SUPABASE_URL = "https://YOUR-PROJECT-REF.supabase.co";
-const SUPABASE_ANON_KEY = "YOUR-ANON-PUBLIC-KEY";
+const SUPABASE_URL = "https://dlfdemfqceotopfclnvc.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRsZmRlbWZxY2VvdG9wZmNsbnZjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMzODk2MDcsImV4cCI6MjA5ODk2NTYwN30.qnXOEF2RNomfjbr7lVRUrW-cxFGYhSBnUw55ooLGrGw";
 
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
