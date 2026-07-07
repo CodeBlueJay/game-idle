@@ -35,7 +35,8 @@ setInterval (function() {
 }, 0)
 setInterval (function() {
   saveGame();
-}, 0)
+}, 10000) // every 10s — was 0ms (i.e. constantly) before, which is fine for
+          // localStorage but would spam Supabase with requests non-stop.
 
 
 function add_one() {
@@ -189,6 +190,7 @@ function buy_limp() {
   }
 }
 function saveGame() {
+    // Always keep a local copy too, so guest play (not logged in) still works.
     localStorage.setItem("memes", memes);
     localStorage.setItem("mps", mps);
     localStorage.setItem("mpc", mpc);
@@ -202,8 +204,35 @@ function saveGame() {
     localStorage.setItem("discord_count", discord_count);
     localStorage.setItem("pc_cost", pc_cost);
     localStorage.setItem("pc_count", pc_count);
+    localStorage.setItem("limp_cost", limp_cost);
+    localStorage.setItem("limp_count", limp_count);
     localStorage.setItem("selectedCursor", selectedCursor);
     localStorage.setItem("darkMode", document.body.classList.contains("dark-mode"));
+
+    // If logged in, also push to Supabase so progress follows the account.
+    if (typeof currentUser !== "undefined" && currentUser) {
+        saveGameToCloud({
+            memes: memes,
+            mps: mps,
+            mpc: mpc,
+            potato: potato,
+            potato_cost: potato_cost,
+            meme_cost: meme_cost,
+            meme_count: meme_count,
+            skill_cost: skill_cost,
+            skill_count: skill_count,
+            discord_cost: discord_cost,
+            discord_count: discord_count,
+            pc_cost: pc_cost,
+            pc_count: pc_count,
+            limp_cost: limp_cost,
+            limp_count: limp_count,
+            selected_cursor: localStorage.getItem("selectedCursor") || "none",
+            dark_mode: document.body.classList.contains("dark-mode"),
+        }).catch(function (err) {
+            console.error("Cloud save failed:", err);
+        });
+    }
 }
 
 
@@ -222,6 +251,8 @@ function loadGame() {
     discord_count = parseInt(localStorage.getItem("discord_count")) || discord_count;
     pc_cost = parseInt(localStorage.getItem("pc_cost")) || pc_cost;
     pc_count = parseInt(localStorage.getItem("pc_count")) || pc_count;
+    limp_cost = parseInt(localStorage.getItem("limp_cost")) || limp_cost;
+    limp_count = parseInt(localStorage.getItem("limp_count")) || limp_count;
 
     // Update the display with loaded values
     document.getElementById("total_memes").innerText = memes;
@@ -341,3 +372,160 @@ function abbreviateNumber(number) {
 
 // Update the display with abbreviated values
 
+// ============================================================
+// Supabase-backed accounts, cross-device saves, chat, leaderboard
+// ============================================================
+
+// Called by supabase-client.js whenever a user signs in (or a session
+// is restored on page load). Overwrites local state with their cloud save.
+window.onGameLoaded = function (save) {
+    if (!save) return;
+
+    memes = Number(save.memes) || 0;
+    mps = Number(save.mps) || 0;
+    mpc = Number(save.mpc) || 1;
+    potato = save.potato || 0;
+    potato_cost = Number(save.potato_cost) || 100;
+    meme_cost = Number(save.meme_cost) || 1000;
+    meme_count = save.meme_count || 0;
+    skill_cost = Number(save.skill_cost) || 10000;
+    skill_count = save.skill_count || 0;
+    discord_cost = Number(save.discord_cost) || 100000;
+    discord_count = save.discord_count || 0;
+    pc_cost = Number(save.pc_cost) || 1000000;
+    pc_count = save.pc_count || 0;
+    limp_cost = Number(save.limp_cost) || 10000000;
+    limp_count = save.limp_count || 0;
+
+    document.getElementById("total_memes").innerText = abbreviateNumber(memes);
+    document.getElementById("mps").innerText = abbreviateNumber(mps);
+    document.getElementById("mpc").innerText = abbreviateNumber(mpc);
+    document.getElementById("potato_count").innerText = abbreviateNumber(potato);
+    document.getElementById("potato_cost").innerText = abbreviateNumber(potato_cost);
+    document.getElementById("meme_cost").innerText = abbreviateNumber(meme_cost);
+    document.getElementById("meme_count").innerText = abbreviateNumber(meme_count);
+    document.getElementById("skill_cost").innerText = abbreviateNumber(skill_cost);
+    document.getElementById("skill_count").innerText = abbreviateNumber(skill_count);
+    document.getElementById("discord_cost").innerText = abbreviateNumber(discord_cost);
+    document.getElementById("discord_count").innerText = abbreviateNumber(discord_count);
+
+    if (save.dark_mode && !document.body.classList.contains("dark-mode")) {
+        dark_mode();
+    }
+
+    var loginLink = document.querySelector(".topnav.right .login");
+    if (loginLink) loginLink.innerText = save.username;
+
+    cancel_login();
+};
+
+window.onSignedOut = function () {
+    var loginLink = document.querySelector(".topnav.right .login");
+    if (loginLink) loginLink.innerText = "Login";
+};
+
+// --- Login form wiring (replaces the old accounts.php POST) ---
+
+var loginForm = document.querySelector("#user-login form");
+var isSignupMode = false;
+
+if (loginForm) {
+    loginForm.addEventListener("submit", function (e) {
+        e.preventDefault();
+        var email = document.getElementById("login-email").value;
+        var password = loginForm.passw.value;
+        var username = loginForm.uname.value;
+
+        var action = isSignupMode
+            ? signUp(email, password, username)
+            : signIn(email, password);
+
+        action
+            .then(function () {
+                cancel_login();
+            })
+            .catch(function (err) {
+                alert(err.message);
+            });
+    });
+}
+
+function toggle_signup_mode() {
+    isSignupMode = !isSignupMode;
+    document.querySelector("#user-login .login_button").innerText = isSignupMode ? "Create Account" : "Login";
+    document.querySelector("#user-login .signup").innerText = isSignupMode ? "Back to Login" : "Create Account";
+}
+
+function do_logout() {
+    signOutUser();
+}
+
+// --- Chat ---
+
+function open_chat() {
+    document.getElementById("chat-panel").style.display = "block";
+    document.getElementById("overlay").style.display = "block";
+    loadRecentMessages().then(function (messages) {
+        var list = document.getElementById("chat-messages");
+        list.innerHTML = "";
+        messages.forEach(appendChatMessage);
+        list.scrollTop = list.scrollHeight;
+    });
+}
+
+function close_chat() {
+    document.getElementById("chat-panel").style.display = "none";
+    document.getElementById("overlay").style.display = "none";
+}
+
+function appendChatMessage(msg) {
+    var list = document.getElementById("chat-messages");
+    var line = document.createElement("div");
+    line.innerHTML = "<b>" + msg.username + ":</b> " + msg.content;
+    list.appendChild(line);
+    list.scrollTop = list.scrollHeight;
+}
+
+function submit_chat_message() {
+    var input = document.getElementById("chat-input");
+    if (!input.value.trim()) return;
+    if (!currentUser) {
+        alert("Log in to chat.");
+        return;
+    }
+    sendChatMessage(input.value.trim())
+        .then(function () {
+            input.value = "";
+        })
+        .catch(function (err) {
+            alert(err.message);
+        });
+}
+
+// Live updates for everyone with the chat open
+subscribeToChat(function (msg) {
+    if (document.getElementById("chat-panel").style.display === "block") {
+        appendChatMessage(msg);
+    }
+});
+
+// --- Leaderboard ---
+
+function open_leaderboard() {
+    document.getElementById("leaderboard-panel").style.display = "block";
+    document.getElementById("overlay").style.display = "block";
+    getLeaderboard(20).then(function (rows) {
+        var list = document.getElementById("leaderboard-list");
+        list.innerHTML = "";
+        rows.forEach(function (row, i) {
+            var line = document.createElement("div");
+            line.innerText = (i + 1) + ". " + row.username + " — " + abbreviateNumber(Number(row.memes)) + " memes";
+            list.appendChild(line);
+        });
+    });
+}
+
+function close_leaderboard() {
+    document.getElementById("leaderboard-panel").style.display = "none";
+    document.getElementById("overlay").style.display = "none";
+}
