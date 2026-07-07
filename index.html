@@ -4,7 +4,7 @@
 <link rel="stylesheet" href="style.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@300&family=Cinzel+Decorative&family=DotGothic16&family=Fauna+One&family=Nova+Square&family=Pixelify+Sans&family=Redacted+Script&family=Supermercado+One&family=Audiowide&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 <script src="jquery.js"></script>
@@ -17,7 +17,7 @@
 <div id="overlay"></div>
 <div id="snackbar">You don't have enough memes to buy this item.</div>
 <div id="savechanges">Changes Saved!</div>
-<script>document.addEventListener('DOMContentLoaded', start_buttons);</script>
+<script>document.addEventListener('DOMContentLoaded', function () { start_buttons(); });</script>
 <div class="topnav">
 <a class="active" href="index.html">Game</a>
 <div class="topnav right">
@@ -25,106 +25,94 @@
 <a class="login" onclick="currentUser ? do_logout() : open_login()" style="width:auto;">Login</a>
 </div>
 </div>
-<h1 style="font-size: 60px;">Game Idle</h1>
+<h1 style="font-size: 48px;">Game Idle</h1>
 <hr>
+<div class="generate-wrap">
 <button class="button red" onclick="add_one()">Generate Meme</button>
-<div style="display: flex">
-<h2>Memes: </h2>
-<h2 id="total_memes">0</h2>
-</div>	
-<div style="display: flex">
-<h2>MPS (Memes per Second):</h2>
-<h2 id="mps">0</h2>
+<div class="stats-row">
+<div class="stat-card primary">
+<span class="stat-label">Memes</span>
+<span class="stat-value" id="total_memes">0</span>
 </div>
-<div style="display: flex">
-<h2>MPC (Memes per Click):</h2>
-<h2 id="mpc">1</h2>
+<div class="stat-card">
+<span class="stat-label">MPS</span>
+<span class="stat-value" id="mps">0</span>
+</div>
+<div class="stat-card">
+<span class="stat-label">MPC</span>
+<span class="stat-value" id="mpc">1</span>
+</div>
+</div>
 </div>
 <hr>
-<h1>Activites</h1>
+<h1 class="section">Activities</h1>
 <div style="display: flex" class="container">
 <button class="button" onclick="open_chat()">Chat</button>
 <button class="button" disabled>Gamble</button>
 </div>
 <hr>
-<h1>Other</h1>
+<h1 class="section">Other</h1>
 <div style="display: flex" class="container">
 <button class="button" onclick="open_leaderboard()">Leaderboard</button>
 <button class="button" disabled>People List</button>
 </div>
 <hr>
-<h1>Shop</h1>
-<div style="display: flex">
-	<h2>Potato Computer&nbsp|&nbsp</h2>
-	<h2>+1 MPS&nbsp|&nbsp</h2>
-	<h2>+1 MPC&nbsp|&nbsp</h2>
-	<h2>Cost:&nbsp</h2>
-	<h2 id="potato_cost">100</h2>
-	<h2>&nbspMemes&nbsp|&nbsp</h2>
-	<h2>You Own:</h2>
-	<h2 id="potato_count">0</h2>
-	<h2>&nbsp</h2>
+<h1 class="section">Shop</h1>
+<div class="shop-grid">
+<div class="shop-item" style="--tier-color:#4b4863;">
+	<div class="item-info">
+		<div class="item-name">Potato Computer</div>
+		<div class="item-stats">+1 MPS · +1 MPC</div>
+	</div>
+	<div class="item-owned">Owned<br><span id="potato_count">0</span></div>
+	<div class="item-cost">Cost<br><b id="potato_cost">100</b></div>
 	<button class="buy" onclick="buy_potato()">Buy</button>
 </div>
-<div style="display: flex">
-	<h2>Imgflip Meme Generator&nbsp|&nbsp</h2>
-	<h2>+10 MPS&nbsp|&nbsp</h2>
-	<h2>+5 MPC&nbsp|&nbsp</h2>
-	<h2>Cost:&nbsp</h2>
-	<h2 id="meme_cost">1000</h2>
-	<h2>&nbspMemes&nbsp|&nbsp</h2>
-	<h2>You Own:</h2>
-	<h2 id="meme_count">0</h2>
-	<h2>&nbsp</h2>
+<div class="shop-item" style="--tier-color:#5a5aa8;">
+	<div class="item-info">
+		<div class="item-name">Imgflip Meme Generator</div>
+		<div class="item-stats">+10 MPS · +5 MPC</div>
+	</div>
+	<div class="item-owned">Owned<br><span id="meme_count">0</span></div>
+	<div class="item-cost">Cost<br><b id="meme_cost">1000</b></div>
 	<button class="buy" onclick="buy_meme_generator()" id="meme-generator">Buy</button>
 </div>
-<div style="display: flex">
-	<h2>Skill Boost&nbsp|&nbsp</h2>
-	<h2>+100 MPS&nbsp|&nbsp</h2>
-	<h2>+50 MPC&nbsp|&nbsp</h2>
-	<h2>Cost:&nbsp</h2>
-	<h2 id="skill_cost">10000</h2>
-	<h2>&nbspMemes&nbsp|&nbsp</h2>
-	<h2>You Own:</h2>
-	<h2 id="skill_count">0</h2>
-	<h2>&nbsp</h2>
+<div class="shop-item" style="--tier-color:#6d5fd6;">
+	<div class="item-info">
+		<div class="item-name">Skill Boost</div>
+		<div class="item-stats">+100 MPS · +50 MPC</div>
+	</div>
+	<div class="item-owned">Owned<br><span id="skill_count">0</span></div>
+	<div class="item-cost">Cost<br><b id="skill_cost">10000</b></div>
 	<button class="buy" onclick="buy_skillboost()" id="skill-boost">Buy</button>
 </div>
-<div style="display: flex">
-	<h2>Discord Basement&nbsp|&nbsp</h2>
-	<h2>+1K MPS&nbsp|&nbsp</h2>
-	<h2>+100 MPC&nbsp|&nbsp</h2>
-	<h2>Cost:&nbsp</h2>
-	<h2 id="discord_cost">100000</h2>
-	<h2>&nbspMemes&nbsp|&nbsp</h2>
-	<h2>You Own:</h2>
-	<h2 id="discord_count">0</h2>
-	<h2>&nbsp</h2>
+<div class="shop-item" style="--tier-color:#8461e0;">
+	<div class="item-info">
+		<div class="item-name">Discord Basement</div>
+		<div class="item-stats">+1K MPS · +100 MPC</div>
+	</div>
+	<div class="item-owned">Owned<br><span id="discord_count">0</span></div>
+	<div class="item-cost">Cost<br><b id="discord_cost">100000</b></div>
 	<button class="buy" onclick="buy_discordbasement()" id="discord-basement">Buy</button>
 </div>
-<div style="display: flex">
-	<h2>God PC?!?!?&nbsp|&nbsp</h2>
-	<h2>+10K MPS&nbsp|&nbsp</h2>
-	<h2>+500 MPC&nbsp|&nbsp</h2>
-	<h2>Cost:&nbsp</h2>
-	<h2 id="pc_cost">1M</h2>
-	<h2>&nbspMemes&nbsp|&nbsp</h2>
-	<h2>You Own:</h2>
-	<h2 id="pc_count">0</h2>
-	<h2>&nbsp</h2>
+<div class="shop-item" style="--tier-color:#a460e0;">
+	<div class="item-info">
+		<div class="item-name">God PC?!?!?</div>
+		<div class="item-stats">+10K MPS · +500 MPC</div>
+	</div>
+	<div class="item-owned">Owned<br><span id="pc_count">0</span></div>
+	<div class="item-cost">Cost<br><b id="pc_cost">1M</b></div>
 	<button class="buy" onclick="buy_godpc()" id="god-pc">Buy</button>
 </div>
-<div style="display: flex" class="limp">
-	<h2>L.I.M.P: License in Meme-ing People&nbsp|&nbsp</h2>
-	<h2>+100K MPS&nbsp|&nbsp</h2>
-	<h2>+1K MPC&nbsp|&nbsp</h2>
-	<h2>Cost:&nbsp</h2>
-	<h2 id="limp_cost">10M</h2>
-	<h2>&nbspMemes&nbsp|&nbsp</h2>
-	<h2>You Own:</h2>
-	<h2 id="limp_count">0</h2>
-	<h2>&nbsp</h2>
+<div class="shop-item limp" style="--tier-color:#ff4fa0;">
+	<div class="item-info">
+		<div class="item-name">L.I.M.P: License in Meme-ing People</div>
+		<div class="item-stats">+100K MPS · +1K MPC</div>
+	</div>
+	<div class="item-owned">Owned<br><span id="limp_count">0</span></div>
+	<div class="item-cost">Cost<br><b id="limp_cost">10M</b></div>
 	<button class="buy" onclick="buy_limp()" id="limp">Buy</button>
+</div>
 </div>
 
 <div id="user-login" class="login-style">
@@ -144,7 +132,7 @@
 		</div>
 	</div>
 </form>
-<script>document.addEventListener('DOMContentLoaded', outside_click);</script>
+<script>document.addEventListener('DOMContentLoaded', function () { outside_click(); });</script>
 </div>
 
 <div id="settings-menu" class="settings-menu">
@@ -153,7 +141,7 @@
 	<hr>
 	<div class="container" style="display: flex;">
 		<button class="button" onclick="saveGame()">Save</button>
-		<button class="button" onclick="dark_mode()">Dark Mode</button>
+		<button class="button" onclick="dark_mode()">Light Mode</button>
 		<button class="button" onclick="confirmWipeSave()">Wipe Save Data</button>
 	</div>
 	<hr>
@@ -195,9 +183,9 @@
 	<div class="modal-content">
 		<svg onclick="close_chat()" class="close" xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256"><path fill="currentColor" d="M208.49 191.51a12 12 0 0 1-17 17L128 145l-63.51 63.49a12 12 0 0 1-17-17L111 128L47.51 64.49a12 12 0 0 1 17-17L128 111l63.51-63.52a12 12 0 0 1 17 17L145 128Z"/></svg>
 		<h2>Chat</h2>
-		<div id="chat-messages" style="height:250px; overflow-y:auto; text-align:left; border:1px solid #ccc; padding:8px; margin-bottom:10px;"></div>
+		<div id="chat-messages"></div>
 		<div style="display:flex; gap:8px;">
-			<input type="text" id="chat-input" placeholder="Say something..." style="flex:1;" onkeydown="if(event.key==='Enter') submit_chat_message()">
+			<input type="text" id="chat-input" placeholder="Say something..." onkeydown="if(event.key==='Enter') submit_chat_message()">
 			<button type="button" class="button" onclick="submit_chat_message()">Send</button>
 		</div>
 	</div>
@@ -207,7 +195,7 @@
 	<div class="modal-content">
 		<svg onclick="close_leaderboard()" class="close" xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256"><path fill="currentColor" d="M208.49 191.51a12 12 0 0 1-17 17L128 145l-63.51 63.49a12 12 0 0 1-17-17L111 128L47.51 64.49a12 12 0 0 1 17-17L128 111l63.51-63.52a12 12 0 0 1 17 17L145 128Z"/></svg>
 		<h2>Leaderboard</h2>
-		<div id="leaderboard-list" style="text-align:left;"></div>
+		<div id="leaderboard-list"></div>
 	</div>
 </div>
 
