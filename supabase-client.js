@@ -6,16 +6,34 @@
 //   3. scripts.js
 // ============================================================
 
-const SUPABASE_URL = "https://dlfdemfqceotopfclnvc.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRsZmRlbWZxY2VvdG9wZmNsbnZjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMzODk2MDcsImV4cCI6MjA5ODk2NTYwN30.qnXOEF2RNomfjbr7lVRUrW-cxFGYhSBnUw55ooLGrGw";
+const SUPABASE_URL = "https://YOUR-PROJECT-REF.supabase.co";
+const SUPABASE_ANON_KEY = "YOUR-ANON-PUBLIC-KEY";
 
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+let supabase;
+try {
+  if (!window.supabase) {
+    throw new Error("Supabase library did not load. Check the CDN <script> tag in index.html.");
+  }
+  if (SUPABASE_URL.includes("YOUR-PROJECT-REF") || SUPABASE_ANON_KEY.includes("YOUR-ANON-PUBLIC-KEY")) {
+    throw new Error("Supabase is not configured yet. Replace SUPABASE_URL and SUPABASE_ANON_KEY at the top of supabase-client.js with your project's real values.");
+  }
+  supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+} catch (err) {
+  console.error(err.message);
+}
 
 let currentUser = null; // scripts.js checks this to decide cloud vs localStorage
+
+function requireSupabase() {
+  if (!supabase) {
+    throw new Error("Supabase isn't configured. Add your project URL and anon key to the top of supabase-client.js.");
+  }
+}
 
 // --- Auth ---
 
 async function signUp(email, password, username) {
+  requireSupabase();
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
@@ -26,42 +44,49 @@ async function signUp(email, password, username) {
 }
 
 async function signIn(email, password) {
+  requireSupabase();
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) throw error;
   return data;
 }
 
 async function signOutUser() {
+  requireSupabase();
   const { error } = await supabase.auth.signOut();
   if (error) throw error;
 }
 
 // Keeps currentUser in sync and triggers a load whenever auth state changes.
 // scripts.js defines window.onGameLoaded / window.onSignedOut.
-supabase.auth.onAuthStateChange((event, session) => {
-  currentUser = session?.user ?? null;
+if (supabase) {
+  supabase.auth.onAuthStateChange((event, session) => {
+    currentUser = session?.user ?? null;
 
-  if (event === "SIGNED_IN") {
-    loadGameFromCloud().then((save) => {
-      if (typeof window.onGameLoaded === "function") window.onGameLoaded(save);
-    });
-  }
-  if (event === "SIGNED_OUT") {
-    if (typeof window.onSignedOut === "function") window.onSignedOut();
-  }
-});
+    if (event === "SIGNED_IN") {
+      loadGameFromCloud().then((save) => {
+        if (typeof window.onGameLoaded === "function") window.onGameLoaded(save);
+      });
+    }
+    if (event === "SIGNED_OUT") {
+      if (typeof window.onSignedOut === "function") window.onSignedOut();
+    }
+  });
+}
 
 // Restore session on page load (e.g. after a refresh)
-supabase.auth.getUser().then(({ data }) => {
-  currentUser = data.user;
-  if (currentUser && typeof window.onGameLoaded === "function") {
-    loadGameFromCloud().then((save) => window.onGameLoaded(save));
-  }
-});
+if (supabase) {
+  supabase.auth.getUser().then(({ data }) => {
+    currentUser = data.user;
+    if (currentUser && typeof window.onGameLoaded === "function") {
+      loadGameFromCloud().then((save) => window.onGameLoaded(save));
+    }
+  });
+}
 
 // --- Save / Load ---
 
 async function saveGameToCloud(state) {
+  requireSupabase();
   if (!currentUser) throw new Error("Not logged in");
   const { error } = await supabase
     .from("saves")
@@ -71,6 +96,7 @@ async function saveGameToCloud(state) {
 }
 
 async function loadGameFromCloud() {
+  requireSupabase();
   if (!currentUser) return null;
   const { data, error } = await supabase
     .from("saves")
@@ -84,6 +110,7 @@ async function loadGameFromCloud() {
 // --- Leaderboard ---
 
 async function getLeaderboard(limit = 20) {
+  requireSupabase();
   const { data, error } = await supabase
     .from("leaderboard")
     .select("username, memes")
@@ -96,6 +123,7 @@ async function getLeaderboard(limit = 20) {
 // --- Chat ---
 
 async function sendChatMessage(content) {
+  requireSupabase();
   if (!currentUser) throw new Error("Not logged in");
   const username = currentUser.user_metadata?.username || currentUser.email.split("@")[0];
   const { error } = await supabase
@@ -105,6 +133,7 @@ async function sendChatMessage(content) {
 }
 
 async function loadRecentMessages(limit = 50) {
+  requireSupabase();
   const { data, error } = await supabase
     .from("messages")
     .select("username, content, created_at")
@@ -115,6 +144,7 @@ async function loadRecentMessages(limit = 50) {
 }
 
 function subscribeToChat(onMessage) {
+  if (!supabase) return function () {}; // no-op unsubscribe
   const channel = supabase
     .channel("public:messages")
     .on(
