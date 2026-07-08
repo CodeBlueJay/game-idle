@@ -282,8 +282,12 @@ function loadGame() {
 }
 
 // Check if there is saved data and load it
-if (localStorage.getItem("memes")) {
-    loadGame();
+try {
+    if (localStorage.getItem("memes")) {
+        loadGame();
+    }
+} catch (err) {
+    console.error("loadGame() failed:", err);
 }
 function confirmWipeSave() {
     showConfirmationPopup();
@@ -341,7 +345,11 @@ function changeCursor() {
     localStorage.setItem("selectedCursor", selectedCursor);
 }
 
-document.getElementById('cursors').addEventListener('change', changeCursor);
+try {
+    document.getElementById('cursors').addEventListener('change', changeCursor);
+} catch (err) {
+    console.error("Cursor listener setup failed:", err);
+}
 // Set the autosave interval (e.g., every 5 minutes)
 var autosaveInterval = 5 * 60 * 1000; // 5 minutes in milliseconds
 
@@ -413,14 +421,14 @@ window.onGameLoaded = function (save) {
         dark_mode();
     }
 
-    var loginLink = document.querySelector(".topnav.right .login");
+    var loginLink = document.getElementById("account-btn-label");
     if (loginLink) loginLink.innerText = save.username;
 
     cancel_login();
 };
 
 window.onSignedOut = function () {
-    var loginLink = document.querySelector(".topnav.right .login");
+    var loginLink = document.getElementById("account-btn-label");
     if (loginLink) loginLink.innerText = "Login";
 };
 
@@ -432,28 +440,60 @@ var isSignupMode = false;
 if (loginForm) {
     loginForm.addEventListener("submit", function (e) {
         e.preventDefault();
-        var email = document.getElementById("login-email").value;
+        var statusEl = document.getElementById("login-status");
+        statusEl.style.display = "none";
+
+        var email = document.getElementById("login-email").value.trim();
         var password = loginForm.passw.value;
-        var username = loginForm.uname.value;
+        var username = loginForm.uname.value.trim();
+
+        if (isSignupMode && !username) {
+            statusEl.textContent = "Please enter a username.";
+            statusEl.style.display = "block";
+            return;
+        }
+
+        if (typeof signIn !== "function" || typeof signUp !== "function") {
+            statusEl.textContent = "Supabase isn't loaded. Check the console for details.";
+            statusEl.style.display = "block";
+            return;
+        }
 
         var action = isSignupMode
             ? signUp(email, password, username)
             : signIn(email, password);
 
         action
-            .then(function () {
+            .then(function (result) {
+                if (isSignupMode && !result.session) {
+                    // Supabase's default setting requires confirming the
+                    // email address before a session is created, so there's
+                    // no one to log in as yet.
+                    statusEl.textContent = "Account created! Check your email to confirm, then log in.";
+                    statusEl.style.display = "block";
+                    isSignupMode = false;
+                    document.querySelector("#user-login .login_button").innerText = "Login";
+                    document.querySelector("#user-login .signup").innerText = "Create Account";
+                    document.getElementById("username-field").style.display = "none";
+                    return;
+                }
                 cancel_login();
             })
             .catch(function (err) {
-                alert(err.message);
+                statusEl.textContent = err.message;
+                statusEl.style.display = "block";
             });
     });
+} else {
+    console.error("Login form wiring failed: #user-login form not found in the page.");
 }
 
 function toggle_signup_mode() {
     isSignupMode = !isSignupMode;
     document.querySelector("#user-login .login_button").innerText = isSignupMode ? "Create Account" : "Login";
     document.querySelector("#user-login .signup").innerText = isSignupMode ? "Back to Login" : "Create Account";
+    document.getElementById("username-field").style.display = isSignupMode ? "block" : "none";
+    document.getElementById("login-status").style.display = "none";
 }
 
 function do_logout() {

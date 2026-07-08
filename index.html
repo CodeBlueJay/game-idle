@@ -5,7 +5,6 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 <script src="jquery.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js" defer></script>
@@ -18,13 +17,33 @@
 <div id="snackbar">You don't have enough memes to buy this item.</div>
 <div id="savechanges">Changes Saved!</div>
 <script>document.addEventListener('DOMContentLoaded', function () { start_buttons(); });</script>
-<div class="topnav">
-<a class="active" href="index.html">Game</a>
-<div class="topnav right">
-<a class="settings" onclick="open_settings()"><i class="fa fa-fw fa-cog"></i></a>
-<a class="login" onclick="(typeof currentUser !== 'undefined' && currentUser) ? do_logout() : open_login()">Login</a>
-</div>
-</div>
+<nav class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="index.html">
+      <span class="brand-mark">GI</span>
+      <span class="brand-name">Game Idle</span>
+    </a>
+    <div class="topbar-actions">
+      <button type="button" class="icon-btn" onclick="open_settings()" aria-label="Settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <line x1="4" y1="6" x2="20" y2="6"/>
+          <line x1="4" y1="12" x2="20" y2="12"/>
+          <line x1="4" y1="18" x2="20" y2="18"/>
+          <circle cx="9" cy="6" r="1.6" fill="currentColor" stroke="none"/>
+          <circle cx="15" cy="12" r="1.6" fill="currentColor" stroke="none"/>
+          <circle cx="9" cy="18" r="1.6" fill="currentColor" stroke="none"/>
+        </svg>
+      </button>
+      <button type="button" id="account-btn" class="account-btn" onclick="(typeof currentUser !== 'undefined' && currentUser) ? do_logout() : open_login()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="8" r="4"/>
+          <path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/>
+        </svg>
+        <span id="account-btn-label">Login</span>
+      </button>
+    </div>
+  </div>
+</nav>
 <h1 style="font-size: 48px;">Game Idle</h1>
 <hr>
 <div class="generate-wrap">
