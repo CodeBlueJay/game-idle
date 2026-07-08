@@ -147,6 +147,17 @@ async function getLeaderboard(limit = 20) {
   return data;
 }
 
+async function getAllPlayers(limit = 200) {
+  requireSupabase();
+  const { data, error } = await supabase
+    .from("leaderboard")
+    .select("username")
+    .order("username", { ascending: true })
+    .limit(limit);
+  if (error) throw error;
+  return data;
+}
+
 // --- Chat ---
 
 async function sendChatMessage(content) {

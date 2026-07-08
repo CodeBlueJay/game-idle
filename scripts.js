@@ -568,3 +568,95 @@ function close_leaderboard() {
     document.getElementById("leaderboard-panel").style.display = "none";
     document.getElementById("overlay").style.display = "none";
 }
+
+// --- Gamble ---
+
+var GAMBLE_TIERS = {
+    safe:    { chance: 0.55, payout: 1.8,  label: "Safe" },
+    risky:   { chance: 0.30, payout: 3.5,  label: "Risky" },
+    jackpot: { chance: 0.08, payout: 12,   label: "Jackpot" },
+};
+
+function open_gamble() {
+    document.getElementById("gamble-panel").style.display = "block";
+    document.getElementById("overlay").style.display = "block";
+    document.getElementById("gamble-balance").innerText = abbreviateNumber(memes);
+    document.getElementById("gamble-result").innerText = "";
+    document.getElementById("gamble-result").className = "";
+}
+
+function close_gamble() {
+    document.getElementById("gamble-panel").style.display = "none";
+    document.getElementById("overlay").style.display = "none";
+}
+
+function set_max_bet() {
+    document.getElementById("gamble-bet").value = Math.floor(memes);
+}
+
+function place_bet(tierName) {
+    var resultEl = document.getElementById("gamble-result");
+    var betInput = document.getElementById("gamble-bet");
+    var bet = Math.floor(Number(betInput.value));
+    var tier = GAMBLE_TIERS[tierName];
+
+    if (!bet || bet <= 0) {
+        resultEl.innerText = "Enter a bet amount first.";
+        resultEl.className = "lose";
+        return;
+    }
+    if (bet > memes) {
+        resultEl.innerText = "You don't have that many memes.";
+        resultEl.className = "lose";
+        return;
+    }
+
+    memes -= bet;
+
+    var won = Math.random() < tier.chance;
+    if (won) {
+        var payout = Math.floor(bet * tier.payout);
+        memes += payout;
+        resultEl.innerText = tier.label + " bet won! +" + abbreviateNumber(payout) + " memes.";
+        resultEl.className = "win";
+    } else {
+        resultEl.innerText = tier.label + " bet lost. -" + abbreviateNumber(bet) + " memes.";
+        resultEl.className = "lose";
+    }
+
+    document.getElementById("total_memes").innerText = abbreviateNumber(memes);
+    document.getElementById("gamble-balance").innerText = abbreviateNumber(memes);
+    betInput.value = "";
+    saveGame();
+}
+
+// --- People List ---
+
+function open_people_list() {
+    document.getElementById("people-list-panel").style.display = "block";
+    document.getElementById("overlay").style.display = "block";
+    var list = document.getElementById("people-list");
+    list.innerHTML = "Loading...";
+
+    getAllPlayers(200)
+        .then(function (rows) {
+            list.innerHTML = "";
+            if (!rows.length) {
+                list.innerHTML = "No players yet.";
+                return;
+            }
+            rows.forEach(function (row) {
+                var line = document.createElement("div");
+                line.innerText = row.username;
+                list.appendChild(line);
+            });
+        })
+        .catch(function (err) {
+            list.innerText = err.message;
+        });
+}
+
+function close_people_list() {
+    document.getElementById("people-list-panel").style.display = "none";
+    document.getElementById("overlay").style.display = "none";
+}

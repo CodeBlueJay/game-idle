@@ -67,13 +67,13 @@
 <h1 class="section">Activities</h1>
 <div style="display: flex" class="container">
 <button class="button" onclick="open_chat()">Chat</button>
-<button class="button" disabled>Gamble</button>
+<button class="button" onclick="open_gamble()">Gamble</button>
 </div>
 <hr>
 <h1 class="section">Other</h1>
 <div style="display: flex" class="container">
 <button class="button" onclick="open_leaderboard()">Leaderboard</button>
-<button class="button" disabled>People List</button>
+<button class="button" onclick="open_people_list()">People List</button>
 </div>
 <hr>
 <h1 class="section">Shop</h1>
@@ -214,6 +214,41 @@
 		<svg onclick="close_leaderboard()" class="close" xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256"><path fill="currentColor" d="M208.49 191.51a12 12 0 0 1-17 17L128 145l-63.51 63.49a12 12 0 0 1-17-17L111 128L47.51 64.49a12 12 0 0 1 17-17L128 111l63.51-63.52a12 12 0 0 1 17 17L145 128Z"/></svg>
 		<h2>Leaderboard</h2>
 		<div id="leaderboard-list"></div>
+	</div>
+</div>
+
+<div id="gamble-panel" class="login-style" style="display:none;">
+	<div class="modal-content">
+		<svg onclick="close_gamble()" class="close" xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256"><path fill="currentColor" d="M208.49 191.51a12 12 0 0 1-17 17L128 145l-63.51 63.49a12 12 0 0 1-17-17L111 128L47.51 64.49a12 12 0 0 1 17-17L128 111l63.51-63.52a12 12 0 0 1 17 17L145 128Z"/></svg>
+		<h2>Gamble</h2>
+		<p class="gamble-balance">You have <b id="gamble-balance">0</b> memes</p>
+		<div class="gamble-bet-row">
+			<input type="number" id="gamble-bet" min="1" step="1" placeholder="Bet amount">
+			<button type="button" class="cancelbtn" onclick="set_max_bet()">Max</button>
+		</div>
+		<div class="gamble-tiers">
+			<button type="button" class="gamble-tier safe" onclick="place_bet('safe')">
+				<span class="tier-name">Safe</span>
+				<span class="tier-odds">55% chance · 1.8x</span>
+			</button>
+			<button type="button" class="gamble-tier risky" onclick="place_bet('risky')">
+				<span class="tier-name">Risky</span>
+				<span class="tier-odds">30% chance · 3.5x</span>
+			</button>
+			<button type="button" class="gamble-tier jackpot" onclick="place_bet('jackpot')">
+				<span class="tier-name">Jackpot</span>
+				<span class="tier-odds">8% chance · 12x</span>
+			</button>
+		</div>
+		<p id="gamble-result"></p>
+	</div>
+</div>
+
+<div id="people-list-panel" class="login-style" style="display:none;">
+	<div class="modal-content">
+		<svg onclick="close_people_list()" class="close" xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256"><path fill="currentColor" d="M208.49 191.51a12 12 0 0 1-17 17L128 145l-63.51 63.49a12 12 0 0 1-17-17L111 128L47.51 64.49a12 12 0 0 1 17-17L128 111l63.51-63.52a12 12 0 0 1 17 17L145 128Z"/></svg>
+		<h2>People</h2>
+		<div id="people-list"></div>
 	</div>
 </div>
 
