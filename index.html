@@ -21,8 +21,8 @@
 <div class="topnav">
 <a class="active" href="index.html">Game</a>
 <div class="topnav right">
-<a class="settings" onclick="open_settings()" style="width:auto;"><i class="fa fa-fw fa-gear"></i></a>
-<a class="login" onclick="currentUser ? do_logout() : open_login()" style="width:auto;">Login</a>
+<a class="settings" onclick="open_settings()"><i class="fa fa-fw fa-cog"></i></a>
+<a class="login" onclick="(typeof currentUser !== 'undefined' && currentUser) ? do_logout() : open_login()">Login</a>
 </div>
 </div>
 <h1 style="font-size: 48px;">Game Idle</h1>
@@ -119,12 +119,15 @@
 <form class="modal-content">
     <svg onclick="cancel_login()" class="close" xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256"><path fill="currentColor" d="M208.49 191.51a12 12 0 0 1-17 17L128 145l-63.51 63.49a12 12 0 0 1-17-17L111 128L47.51 64.49a12 12 0 0 1 17-17L128 111l63.51-63.52a12 12 0 0 1 17 17L145 128Z"/></svg>
 	<div class="login">
-		<label for="uname"><b>Username</b></label>
-		<input type="text" placeholder="Enter Username" name="uname" required>
+		<div id="username-field">
+			<label for="uname"><b>Username</b></label>
+			<input type="text" placeholder="Enter Username" name="uname">
+		</div>
 		<label for="login-email"><b>Email</b></label>
 		<input type="email" placeholder="Enter Email" id="login-email" required>
 		<label for="passw"><b>Password</b></label>
 		<input type="password" placeholder="Enter Password" name="passw" required>
+		<p id="login-status" style="display:none;"></p>
 		<div style="gap: 10px;" class="signup-buttons">
 			<button type="submit" class="login_button">Login</button>
 			<button type="button" onclick="cancel_login()" class="cancelbtn">Cancel</button>
