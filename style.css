@@ -25,6 +25,10 @@
   --shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.6);
 }
 
+html {
+  overflow-x: hidden;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -38,6 +42,7 @@ body {
   cursor: default;
   transition: background-color 0.4s, color 0.4s;
   min-height: 100vh;
+  overflow-x: hidden;
 }
 
 /* Site defaults to the dark "meme economy" theme above.
@@ -105,8 +110,11 @@ h1 + hr,
   position: sticky;
   top: 0;
   z-index: 5;
-  width: 100vw;
-  margin-left: calc(50% - 50vw);
+  /* Bleeds edge-to-edge by cancelling body's own 16px side padding,
+     instead of using 100vw (which on non-overlay scrollbars includes the
+     scrollbar's own width and causes a persistent horizontal scrollbar). */
+  margin-left: -16px;
+  margin-right: -16px;
   background: rgba(16, 14, 26, 0.75);
   backdrop-filter: blur(14px);
   border-bottom: 1px solid var(--border);
@@ -120,6 +128,7 @@ h1 + hr,
   align-items: center;
   justify-content: space-between;
   padding: 12px 16px;
+  min-width: 0;
 }
 
 .brand {
@@ -128,6 +137,8 @@ h1 + hr,
   gap: 10px;
   text-decoration: none;
   color: var(--text);
+  min-width: 0;
+  flex-shrink: 1;
 }
 
 .brand-mark {
@@ -150,12 +161,16 @@ h1 + hr,
   font-weight: 700;
   font-size: 16px;
   letter-spacing: -0.01em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .topbar-actions {
   display: flex;
   align-items: center;
   gap: 10px;
+  flex-shrink: 0;
 }
 
 .icon-btn {
@@ -201,6 +216,13 @@ h1 + hr,
   font-weight: 500;
   white-space: nowrap;
   transition: 0.2s;
+  max-width: 140px;
+}
+
+.account-btn span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .account-btn svg {
