@@ -443,11 +443,10 @@ if (loginForm) {
         var statusEl = document.getElementById("login-status");
         statusEl.style.display = "none";
 
-        var email = document.getElementById("login-email").value.trim();
-        var password = loginForm.passw.value;
         var username = loginForm.uname.value.trim();
+        var password = loginForm.passw.value;
 
-        if (isSignupMode && !username) {
+        if (!username) {
             statusEl.textContent = "Please enter a username.";
             statusEl.style.display = "block";
             return;
@@ -460,21 +459,22 @@ if (loginForm) {
         }
 
         var action = isSignupMode
-            ? signUp(email, password, username)
-            : signIn(email, password);
+            ? signUp(username, password)
+            : signIn(username, password);
 
         action
             .then(function (result) {
                 if (isSignupMode && !result.session) {
-                    // Supabase's default setting requires confirming the
-                    // email address before a session is created, so there's
-                    // no one to log in as yet.
-                    statusEl.textContent = "Account created! Check your email to confirm, then log in.";
+                    // Supabase's default setting requires confirming an email
+                    // before a session is created. Since accounts here don't
+                    // use a real email, this must be turned off in your
+                    // Supabase project (Authentication -> Sign In / Providers
+                    // -> Email -> disable "Confirm email").
+                    statusEl.textContent = "Account created, but couldn't log you in automatically. Ask the site owner to disable email confirmation in Supabase, then try logging in.";
                     statusEl.style.display = "block";
                     isSignupMode = false;
                     document.querySelector("#user-login .login_button").innerText = "Login";
                     document.querySelector("#user-login .signup").innerText = "Create Account";
-                    document.getElementById("username-field").style.display = "none";
                     return;
                 }
                 cancel_login();
@@ -492,7 +492,6 @@ function toggle_signup_mode() {
     isSignupMode = !isSignupMode;
     document.querySelector("#user-login .login_button").innerText = isSignupMode ? "Create Account" : "Login";
     document.querySelector("#user-login .signup").innerText = isSignupMode ? "Back to Login" : "Create Account";
-    document.getElementById("username-field").style.display = isSignupMode ? "block" : "none";
     document.getElementById("login-status").style.display = "none";
 }
 

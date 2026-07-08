@@ -510,10 +510,6 @@ label {
   text-align: left;
 }
 
-#username-field {
-  display: none;
-}
-
 #login-status {
   font-size: 13px;
   color: var(--accent-2);

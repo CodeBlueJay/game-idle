@@ -30,23 +30,50 @@ function requireSupabase() {
   }
 }
 
+// Supabase's built-in auth is email/password under the hood, but this game
+// only wants a username. We derive a stable, fake-but-valid email from the
+// username so Supabase is happy, while the player never sees or types one.
+// Two side effects worth knowing:
+//   1. Usernames must be unique (Supabase enforces this via the derived
+//      email's uniqueness), which is what you want anyway.
+//   2. Because the "email" isn't real, you MUST turn off "Confirm email"
+//      in your Supabase project (Authentication -> Sign In / Providers ->
+//      Email -> Confirm email), or accounts can never be confirmed.
+function usernameToEmail(username) {
+  const slug = username.trim().toLowerCase().replace(/[^a-z0-9._-]/g, "");
+  if (!slug) throw new Error("Username must contain at least one letter or number.");
+  return slug + "@players.game-idle.local";
+}
+
 // --- Auth ---
 
-async function signUp(email, password, username) {
+async function signUp(username, password) {
   requireSupabase();
+  const email = usernameToEmail(username);
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
-    options: { data: { username } },
+    options: { data: { username: username.trim() } },
   });
-  if (error) throw error;
+  if (error) {
+    if (error.message && /already registered|already exists/i.test(error.message)) {
+      throw new Error("That username is already taken.");
+    }
+    throw error;
+  }
   return data;
 }
 
-async function signIn(email, password) {
+async function signIn(username, password) {
   requireSupabase();
+  const email = usernameToEmail(username);
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) throw error;
+  if (error) {
+    if (error.message && /invalid login credentials/i.test(error.message)) {
+      throw new Error("Incorrect username or password.");
+    }
+    throw error;
+  }
   return data;
 }
 
