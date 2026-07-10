@@ -24,19 +24,55 @@ setInterval (function() {
   document.getElementById("total_memes").innerText = abbreviateNumber(memes);
   document.getElementById("mps").innerText = abbreviateNumber(mps);
   document.getElementById("mpc").innerText = abbreviateNumber(mpc);
-  document.getElementById("potato_count").innerText = abbreviateNumber(potato);
+  document.getElementById("potato_count").innerText = formatCount(potato);
   document.getElementById("potato_cost").innerText = abbreviateNumber(potato_cost);
   document.getElementById("meme_cost").innerText = abbreviateNumber(meme_cost);
-  document.getElementById("meme_count").innerText = abbreviateNumber(meme_count);
+  document.getElementById("meme_count").innerText = formatCount(meme_count);
   document.getElementById("skill_cost").innerText = abbreviateNumber(skill_cost);
-  document.getElementById("skill_count").innerText = abbreviateNumber(skill_count);
+  document.getElementById("skill_count").innerText = formatCount(skill_count);
   document.getElementById("discord_cost").innerText = abbreviateNumber(discord_cost);
-  document.getElementById("discord_count").innerText = abbreviateNumber(discord_count); 
-}, 0)
+  document.getElementById("discord_count").innerText = formatCount(discord_count);
+  document.getElementById("pc_cost").innerText = abbreviateNumber(pc_cost);
+  document.getElementById("pc_count").innerText = formatCount(pc_count);
+  document.getElementById("limp_cost").innerText = abbreviateNumber(limp_cost);
+  document.getElementById("limp_count").innerText = formatCount(limp_count);
+  update_buy_buttons();
+}, 100) // was 0ms (i.e. as fast as the browser would allow) — 100ms is
+        // still instant-feeling and far less wasteful on CPU/battery.
 setInterval (function() {
   saveGame();
 }, 10000) // every 10s — was 0ms (i.e. constantly) before, which is fine for
           // localStorage but would spam Supabase with requests non-stop.
+
+// Whole numbers only (no decimals) — used for "owned" counts, since
+// fractional/decimal-looking counts (e.g. "3.00") read oddly for something
+// you can only ever own a whole number of.
+function formatCount(number) {
+    return Math.floor(number).toLocaleString();
+}
+
+// Disables a shop's Buy button unless the player can currently afford it.
+// This replaces the old start_buttons() behavior, which permanently
+// disabled four of the six buttons at page load and never re-enabled them
+// regardless of affordability — while the other two (Potato Computer and
+// L.I.M.P.) were never included at all, so they stayed clickable no matter
+// what the player could actually afford.
+function update_buy_buttons() {
+    var shopButtons = [
+        { id: "potato", cost: potato_cost },
+        { id: "meme-generator", cost: meme_cost },
+        { id: "skill-boost", cost: skill_cost },
+        { id: "discord-basement", cost: discord_cost },
+        { id: "god-pc", cost: pc_cost },
+        { id: "limp", cost: limp_cost },
+    ];
+    shopButtons.forEach(function (item) {
+        var button = document.getElementById(item.id);
+        if (button) {
+            button.disabled = memes < item.cost;
+        }
+    });
+}
 
 
 function add_one() {
@@ -62,13 +98,14 @@ function buy_potato() {
     memes -= potato_cost;
     document.getElementById("total_memes").innerText = memes;  // Update this line
     potato++;
-    document.getElementById("potato_count").innerText = potato;
+    document.getElementById("potato_count").innerText = formatCount(potato);
     potato_cost += 50;
     document.getElementById("potato_cost").innerText = potato_cost;
     mps += 1;
     document.getElementById("mps").innerText = mps;
     mpc += 1;
     document.getElementById("mpc").innerText = mpc;
+    update_buy_buttons();
   } else {
     snackbar();
   }
@@ -104,23 +141,21 @@ function save_changes() {
   	setTimeout(function(){ x.className = x.className.replace("show", ""); }, 3000);
 }
 function start_buttons() {
-	document.getElementById("meme-generator").disabled = true;
-	document.getElementById("skill-boost").disabled = true;
-	document.getElementById("discord-basement").disabled = true;
-	document.getElementById("god-pc").disabled = true;
+	update_buy_buttons();
 }
 function buy_meme_generator() {
   if (memes >= meme_cost) {
     memes -= meme_cost;
     document.getElementById("total_memes").innerText = memes;
     meme_count++;
-    document.getElementById("meme_count").innerText = meme_count;
+    document.getElementById("meme_count").innerText = formatCount(meme_count);
     meme_cost += 100;
     document.getElementById("meme_cost").innerText = meme_cost;
     mps += 10;
     document.getElementById("mps").innerText = mps;
     mpc += 5;
     document.getElementById("mpc").innerText = mpc;
+    update_buy_buttons();
   } else {
     snackbar();
   }
@@ -130,13 +165,14 @@ function buy_skillboost() {
     memes -= skill_cost;
     document.getElementById("total_memes").innerText = memes;
     skill_count++;
-    document.getElementById("skill_count").innerText = skill_count;
+    document.getElementById("skill_count").innerText = formatCount(skill_count);
     skill_cost += 1000;
     document.getElementById("skill_cost").innerText = skill_cost;
     mps += 100;
     document.getElementById("mps").innerText = mps;
     mpc += 50;
     document.getElementById("mpc").innerText = mpc;
+    update_buy_buttons();
   } else {
     snackbar();
   }
@@ -146,13 +182,14 @@ function buy_discordbasement() {
     memes -= discord_cost;
     document.getElementById("total_memes").innerText = memes;
     discord_count++;
-    document.getElementById("discord_count").innerText = discord_count;
+    document.getElementById("discord_count").innerText = formatCount(discord_count);
     discord_cost += 10000;
     document.getElementById("discord_cost").innerText = discord_cost;
     mps += 1000;
     document.getElementById("mps").innerText = mps;
     mpc += 100;
     document.getElementById("mpc").innerText = mpc;
+    update_buy_buttons();
   } else {
     snackbar();
   }
@@ -162,13 +199,14 @@ function buy_godpc() {
     memes -= pc_cost;
     document.getElementById("total_memes").innerText = memes;
     pc_count++;
-    document.getElementById("pc_count").innerText = pc_count;
+    document.getElementById("pc_count").innerText = formatCount(pc_count);
     pc_cost += 100000;
     document.getElementById("pc_cost").innerText = pc_cost;
     mps += 10000;
     document.getElementById("mps").innerText = mps;
     mpc += 500;
     document.getElementById("mpc").innerText = mpc;
+    update_buy_buttons();
   } else {
     snackbar();
   }
@@ -178,13 +216,14 @@ function buy_limp() {
     memes -= limp_cost;
     document.getElementById("total_memes").innerText = memes;
     limp_count++;
-    document.getElementById("limp_count").innerText = limp_count;
+    document.getElementById("limp_count").innerText = formatCount(limp_count);
     limp_cost += 1000000;
     document.getElementById("limp_cost").innerText = limp_cost;
     mps += 100000;
     document.getElementById("mps").innerText = mps;
     mpc += 1000;
     document.getElementById("mpc").innerText = mpc;
+    update_buy_buttons();
   } else {
     snackbar();
   }
@@ -258,16 +297,19 @@ function loadGame() {
     document.getElementById("total_memes").innerText = memes;
     document.getElementById("mps").innerText = mps;
     document.getElementById("mpc").innerText = mpc;
-    document.getElementById("potato_count").innerText = potato;
+    document.getElementById("potato_count").innerText = formatCount(potato);
     document.getElementById("potato_cost").innerText = potato_cost;
     document.getElementById("meme_cost").innerText = meme_cost;
-    document.getElementById("meme_count").innerText = meme_count;
+    document.getElementById("meme_count").innerText = formatCount(meme_count);
     document.getElementById("skill_cost").innerText = skill_cost;
-    document.getElementById("skill_count").innerText = skill_count;
+    document.getElementById("skill_count").innerText = formatCount(skill_count);
     document.getElementById("discord_cost").innerText = discord_cost;
-    document.getElementById("discord_count").innerText = discord_count;
+    document.getElementById("discord_count").innerText = formatCount(discord_count);
     document.getElementById("pc_cost").innerText = pc_cost;
-    document.getElementById("pc_count").innerText = pc_count;
+    document.getElementById("pc_count").innerText = formatCount(pc_count);
+    document.getElementById("limp_cost").innerText = limp_cost;
+    document.getElementById("limp_count").innerText = formatCount(limp_count);
+    update_buy_buttons();
 
     var savedCursor = localStorage.getItem("cursor");
     if (savedCursor) {
@@ -309,19 +351,28 @@ function wipeSaveData() {
     skill_cost = 10000;
     discord_cost = 100000;
     discord_count = 0;
+    pc_cost = 1000000;
+    pc_count = 0;
+    limp_cost = 10000000;
+    limp_count = 0;
 
     // Update the display with the reset values
     document.getElementById("total_memes").innerText = memes;
     document.getElementById("mps").innerText = mps;
     document.getElementById("mpc").innerText = mpc;
-    document.getElementById("potato_count").innerText = potato;
+    document.getElementById("potato_count").innerText = formatCount(potato);
     document.getElementById("potato_cost").innerText = potato_cost;
     document.getElementById("meme_cost").innerText = meme_cost;
-    document.getElementById("meme_count").innerText = meme_count;
+    document.getElementById("meme_count").innerText = formatCount(meme_count);
     document.getElementById("skill_cost").innerText = skill_cost;
-    document.getElementById("skill_count").innerText = skill_count;
+    document.getElementById("skill_count").innerText = formatCount(skill_count);
     document.getElementById("discord_cost").innerText = discord_cost;
-    document.getElementById("discord_count").innerText = discord_count;
+    document.getElementById("discord_count").innerText = formatCount(discord_count);
+    document.getElementById("pc_cost").innerText = pc_cost;
+    document.getElementById("pc_count").innerText = formatCount(pc_count);
+    document.getElementById("limp_cost").innerText = limp_cost;
+    document.getElementById("limp_count").innerText = formatCount(limp_count);
+    update_buy_buttons();
 
     // Close the settings menu after wiping save data
     close_settings();
@@ -408,14 +459,19 @@ window.onGameLoaded = function (save) {
     document.getElementById("total_memes").innerText = abbreviateNumber(memes);
     document.getElementById("mps").innerText = abbreviateNumber(mps);
     document.getElementById("mpc").innerText = abbreviateNumber(mpc);
-    document.getElementById("potato_count").innerText = abbreviateNumber(potato);
+    document.getElementById("potato_count").innerText = formatCount(potato);
     document.getElementById("potato_cost").innerText = abbreviateNumber(potato_cost);
     document.getElementById("meme_cost").innerText = abbreviateNumber(meme_cost);
-    document.getElementById("meme_count").innerText = abbreviateNumber(meme_count);
+    document.getElementById("meme_count").innerText = formatCount(meme_count);
     document.getElementById("skill_cost").innerText = abbreviateNumber(skill_cost);
-    document.getElementById("skill_count").innerText = abbreviateNumber(skill_count);
+    document.getElementById("skill_count").innerText = formatCount(skill_count);
     document.getElementById("discord_cost").innerText = abbreviateNumber(discord_cost);
-    document.getElementById("discord_count").innerText = abbreviateNumber(discord_count);
+    document.getElementById("discord_count").innerText = formatCount(discord_count);
+    document.getElementById("pc_cost").innerText = abbreviateNumber(pc_cost);
+    document.getElementById("pc_count").innerText = formatCount(pc_count);
+    document.getElementById("limp_cost").innerText = abbreviateNumber(limp_cost);
+    document.getElementById("limp_count").innerText = formatCount(limp_count);
+    update_buy_buttons();
 
     if (save.dark_mode && !document.body.classList.contains("dark-mode")) {
         dark_mode();
