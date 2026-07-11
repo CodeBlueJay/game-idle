@@ -23,6 +23,7 @@
   --radius: 14px;
   --radius-sm: 8px;
   --shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.6);
+  --topbar-bg: rgba(16, 14, 26, 0.75);
 }
 
 html {
@@ -56,6 +57,7 @@ body.dark-mode {
   --border: #ddd2fb;
   --text: #1c1730;
   --text-dim: #6e6690;
+  --topbar-bg: rgba(255, 255, 255, 0.75);
 }
 
 h1, h2, h3 {
@@ -115,7 +117,7 @@ h1 + hr,
      scrollbar's own width and causes a persistent horizontal scrollbar). */
   margin-left: -16px;
   margin-right: -16px;
-  background: rgba(16, 14, 26, 0.75);
+  background: var(--topbar-bg);
   backdrop-filter: blur(14px);
   border-bottom: 1px solid var(--border);
   margin-bottom: 28px;
@@ -772,6 +774,229 @@ label {
 
 #gamble-result.lose {
   color: var(--danger);
+}
+
+/* --- Clickable usernames (chat, leaderboard, people list) --- */
+.profile-link {
+  color: var(--accent);
+  cursor: pointer;
+  font-weight: 600;
+  text-decoration: none;
+  transition: 0.15s;
+}
+
+.profile-link:hover {
+  color: var(--accent-2);
+  text-decoration: underline;
+}
+
+#people-list .profile-link {
+  font-weight: 500;
+  color: var(--text);
+  display: block;
+}
+
+#people-list .profile-link:hover {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+/* --- Profile --- */
+#profile-view {
+  text-align: center;
+}
+
+.profile-avatar {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  font-size: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 12px;
+}
+
+#profile-username {
+  margin-bottom: 6px;
+}
+
+.profile-bio {
+  color: var(--text-dim);
+  font-size: 14px;
+  margin: 0 0 14px;
+  line-height: 1.5;
+}
+
+.profile-stat {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 14px;
+  color: var(--text-dim);
+  margin: 0 0 16px;
+}
+
+.profile-stat b {
+  color: var(--text);
+}
+
+#profile-status,
+#profile-edit-status {
+  font-size: 13px;
+  color: var(--accent-2);
+  margin-top: 10px;
+}
+
+#profile-edit label {
+  display: block;
+  margin-bottom: 8px;
+}
+
+.emoji-picker {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.emoji-option {
+  aspect-ratio: 1;
+  font-size: 20px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: 0.15s;
+}
+
+.emoji-option:hover {
+  border-color: var(--accent);
+  cursor: pointer;
+}
+
+.emoji-option.selected {
+  border-color: var(--accent);
+  background: rgba(139, 108, 255, 0.15);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
+#profile-bio-input {
+  width: 100%;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-family: "Inter", sans-serif;
+  padding: 10px 12px;
+  resize: vertical;
+  margin-bottom: 14px;
+  box-sizing: border-box;
+}
+
+/* --- Friends / Clans (Socials) --- */
+#friends-panel .modal-content,
+#clans-panel .modal-content {
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.social-add-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.social-add-row input {
+  margin: 0 !important;
+  flex: 1;
+}
+
+.social-subhead {
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-dim);
+  margin: 16px 0 8px;
+}
+
+.social-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.social-empty {
+  color: var(--text-dim);
+  font-size: 13px;
+  margin: 0;
+}
+
+.social-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+}
+
+.social-row .profile-link {
+  font-weight: 500;
+}
+
+.social-row-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.social-row-actions button {
+  padding: 6px 12px;
+  font-size: 13px;
+}
+
+#friend-add-status,
+#clan-create-status,
+#clan-mine-status {
+  font-size: 13px;
+  color: var(--accent-2);
+  margin: -4px 0 12px;
+}
+
+.clan-header {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.clan-tag-badge {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 12px;
+  color: var(--accent);
+}
+
+#clan-owner-controls label {
+  display: block;
+  margin-bottom: 8px;
+}
+
+#clan-bio-input {
+  width: 100%;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-family: "Inter", sans-serif;
+  padding: 10px 12px;
+  resize: vertical;
+  margin-bottom: 12px;
+  box-sizing: border-box;
 }
 
 /* --- Toasts --- */

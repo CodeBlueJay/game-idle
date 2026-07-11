@@ -32,7 +32,7 @@
           <circle cx="9" cy="18" r="1.6" fill="currentColor" stroke="none"/>
         </svg>
       </button>
-      <button type="button" id="account-btn" class="account-btn" onclick="(typeof currentUser !== 'undefined' && currentUser) ? do_logout() : open_login()">
+      <button type="button" id="account-btn" class="account-btn" onclick="(typeof currentUser !== 'undefined' && currentUser) ? open_own_profile() : open_login()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="8" r="4"/>
           <path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/>
@@ -72,6 +72,12 @@
 <div style="display: flex" class="container">
 <button class="button" onclick="open_leaderboard()">Leaderboard</button>
 <button class="button" onclick="open_people_list()">People List</button>
+</div>
+<hr>
+<h1 class="section">Socials</h1>
+<div style="display: flex" class="container">
+<button class="button" onclick="open_friends()">Friends</button>
+<button class="button" onclick="open_clans()">Clans</button>
 </div>
 <hr>
 <h1 class="section">Shop</h1>
@@ -156,9 +162,10 @@
 	<svg onclick="close_settings()" class="x-button" xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256"><path fill="currentColor" d="M208.49 191.51a12 12 0 0 1-17 17L128 145l-63.51 63.49a12 12 0 0 1-17-17L111 128L47.51 64.49a12 12 0 0 1 17-17L128 111l63.51-63.52a12 12 0 0 1 17 17L145 128Z"/></svg>
 	<hr>
 	<div class="container" style="display: flex;">
-		<button class="button" onclick="saveGame()">Save</button>
+		<button class="button" onclick="manual_save_click()">Save</button>
 		<button class="button" onclick="dark_mode()">Light Mode</button>
 		<button class="button" onclick="confirmWipeSave()">Wipe Save Data</button>
+		<button class="button" onclick="do_logout()">Log Out</button>
 	</div>
 	<hr>
 	<form action="" class="cursor-menu">
@@ -192,7 +199,7 @@
 		</select>
 	</form>
 	<br>
-	<button class="save" onclick="save_changes(); saveGame(); close_settings();">Save Changes</button>
+	<button class="save" onclick="manual_save_click(); close_settings();">Save Changes</button>
 </div>
 
 <div id="chat-panel" class="login-style" style="display:none;">
@@ -250,12 +257,116 @@
 	</div>
 </div>
 
+<div id="profile-panel" class="login-style" style="display:none;">
+	<div class="modal-content">
+		<svg onclick="close_profile()" class="close" xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256"><path fill="currentColor" d="M208.49 191.51a12 12 0 0 1-17 17L128 145l-63.51 63.49a12 12 0 0 1-17-17L111 128L47.51 64.49a12 12 0 0 1 17-17L128 111l63.51-63.52a12 12 0 0 1 17 17L145 128Z"/></svg>
+
+		<div id="profile-view">
+			<div class="profile-avatar" id="profile-avatar">🐸</div>
+			<h2 id="profile-username">Username</h2>
+			<p class="profile-bio" id="profile-bio"></p>
+			<p class="profile-stat">Memes: <b id="profile-memes">0</b></p>
+			<button type="button" class="button" id="profile-edit-btn" onclick="enter_profile_edit_mode()" style="display:none;">Edit Profile</button>
+			<p id="profile-status" style="display:none;"></p>
+		</div>
+
+		<div id="profile-edit" style="display:none;">
+			<label>Avatar</label>
+			<div class="emoji-picker" id="emoji-picker">
+				<button type="button" class="emoji-option" data-emoji="🐸">🐸</button>
+				<button type="button" class="emoji-option" data-emoji="🥔">🥔</button>
+				<button type="button" class="emoji-option" data-emoji="💾">💾</button>
+				<button type="button" class="emoji-option" data-emoji="🎮">🎮</button>
+				<button type="button" class="emoji-option" data-emoji="👾">👾</button>
+				<button type="button" class="emoji-option" data-emoji="🤖">🤖</button>
+				<button type="button" class="emoji-option" data-emoji="🔥">🔥</button>
+				<button type="button" class="emoji-option" data-emoji="💎">💎</button>
+				<button type="button" class="emoji-option" data-emoji="👑">👑</button>
+				<button type="button" class="emoji-option" data-emoji="🍀">🍀</button>
+				<button type="button" class="emoji-option" data-emoji="🧠">🧠</button>
+				<button type="button" class="emoji-option" data-emoji="🎲">🎲</button>
+			</div>
+			<label for="profile-bio-input">Bio</label>
+			<textarea id="profile-bio-input" maxlength="140" placeholder="Say something about yourself..." rows="3"></textarea>
+			<div style="gap: 10px;" class="signup-buttons">
+				<button type="button" class="login_button" onclick="save_profile_edits()">Save</button>
+				<button type="button" class="cancelbtn" onclick="cancel_profile_edit()">Cancel</button>
+			</div>
+			<p id="profile-edit-status" style="display:none;"></p>
+		</div>
+	</div>
+</div>
+
+<div id="friends-panel" class="login-style" style="display:none;">
+	<div class="modal-content">
+		<svg onclick="close_friends()" class="close" xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256"><path fill="currentColor" d="M208.49 191.51a12 12 0 0 1-17 17L128 145l-63.51 63.49a12 12 0 0 1-17-17L111 128L47.51 64.49a12 12 0 0 1 17-17L128 111l63.51-63.52a12 12 0 0 1 17 17L145 128Z"/></svg>
+		<h2>Friends</h2>
+
+		<div class="social-add-row">
+			<input type="text" id="friend-username-input" placeholder="Username" onkeydown="if(event.key==='Enter') send_friend_request()">
+			<button type="button" class="login_button" onclick="send_friend_request()">Add</button>
+		</div>
+		<p id="friend-add-status" style="display:none;"></p>
+
+		<h3 class="social-subhead">Requests</h3>
+		<div id="friend-requests-list" class="social-list"><p class="social-empty">No pending requests.</p></div>
+
+		<h3 class="social-subhead">Sent</h3>
+		<div id="friend-sent-list" class="social-list"><p class="social-empty">No sent requests.</p></div>
+
+		<h3 class="social-subhead">My Friends</h3>
+		<div id="friends-list" class="social-list"><p class="social-empty">No friends yet.</p></div>
+	</div>
+</div>
+
+<div id="clans-panel" class="login-style" style="display:none;">
+	<div class="modal-content">
+		<svg onclick="close_clans()" class="close" xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256"><path fill="currentColor" d="M208.49 191.51a12 12 0 0 1-17 17L128 145l-63.51 63.49a12 12 0 0 1-17-17L111 128L47.51 64.49a12 12 0 0 1 17-17L128 111l63.51-63.52a12 12 0 0 1 17 17L145 128Z"/></svg>
+		<h2>Clans</h2>
+
+		<div id="clan-browse-view">
+			<div class="social-add-row">
+				<input type="text" id="clan-name-input" placeholder="Clan name" maxlength="30">
+				<input type="text" id="clan-tag-input" placeholder="Tag" maxlength="6" style="max-width:80px;">
+				<button type="button" class="login_button" onclick="create_clan()">Create</button>
+			</div>
+			<p id="clan-create-status" style="display:none;"></p>
+
+			<h3 class="social-subhead">Browse Clans</h3>
+			<div id="clan-browse-list" class="social-list"><p class="social-empty">No clans yet — start one!</p></div>
+		</div>
+
+		<div id="clan-mine-view" style="display:none;">
+			<div class="clan-header">
+				<h3 id="clan-mine-name">Clan Name</h3>
+				<span id="clan-mine-tag" class="clan-tag-badge"></span>
+			</div>
+			<p class="profile-bio" id="clan-mine-bio"></p>
+
+			<h3 class="social-subhead">Members</h3>
+			<div id="clan-mine-members" class="social-list"></div>
+
+			<div id="clan-owner-controls" style="display:none;">
+				<label for="clan-bio-input">Edit clan bio</label>
+				<textarea id="clan-bio-input" maxlength="300" rows="3"></textarea>
+				<div style="gap: 10px;" class="signup-buttons">
+					<button type="button" class="login_button" onclick="save_clan_bio()">Save Bio</button>
+					<button type="button" class="cancelbtn" onclick="confirm_delete_clan()">Delete Clan</button>
+				</div>
+			</div>
+			<p id="clan-mine-status" style="display:none;"></p>
+
+			<button type="button" class="cancelbtn" style="width:100%; margin-top:10px;" onclick="leave_clan()">Leave Clan</button>
+		</div>
+	</div>
+</div>
+
 <div id="confirmation-overlay" class="confirmation-overlay"></div>
 <div id="confirmation-popup" class="confirmation-popup">
     <div class="popup-content">
         <svg class="close-popup" onclick="closeConfirmationPopup()" xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256"><path fill="currentColor" d="M208.49 191.51a12 12 0 0 1-17 17L128 145l-63.51 63.49a12 12 0 0 1-17-17L111 128L47.51 64.49a12 12 0 0 1 17-17L128 111l63.51-63.52a12 12 0 0 1 17 17L145 128Z"/></svg>
-        <p>Are you sure you want to wipe your save data? This action cannot be undone.</p>
-        <button class="button" onclick="wipeSaveData()">Yes, Wipe Data</button>
+        <p id="confirmation-popup-text">Are you sure?</p>
+        <button class="button" id="confirmation-popup-confirm-btn" onclick="runConfirmationCallback()">Yes</button>
         <button class="cancelbtn" onclick="closeConfirmationPopup()">Cancel</button>
     </div>
 </div>

@@ -229,7 +229,16 @@ function buy_limp() {
   }
 }
 function saveGame() {
-    // Always keep a local copy too, so guest play (not logged in) still works.
+    // Progress only persists with an account — without this, buying
+    // items/clicking still works for the current tab, but nothing survives
+    // a reload. manual_save_click() below shows a message explaining this
+    // when someone hits the Save button while logged out.
+    if (typeof currentUser === "undefined" || !currentUser) {
+        return;
+    }
+
+    var nowTimestamp = Date.now();
+
     localStorage.setItem("memes", memes);
     localStorage.setItem("mps", mps);
     localStorage.setItem("mpc", mpc);
@@ -247,31 +256,40 @@ function saveGame() {
     localStorage.setItem("limp_count", limp_count);
     localStorage.setItem("selectedCursor", selectedCursor);
     localStorage.setItem("darkMode", document.body.classList.contains("dark-mode"));
+    localStorage.setItem("updatedAt", nowTimestamp.toString());
 
-    // If logged in, also push to Supabase so progress follows the account.
-    if (typeof currentUser !== "undefined" && currentUser) {
-        saveGameToCloud({
-            memes: memes,
-            mps: mps,
-            mpc: mpc,
-            potato: potato,
-            potato_cost: potato_cost,
-            meme_cost: meme_cost,
-            meme_count: meme_count,
-            skill_cost: skill_cost,
-            skill_count: skill_count,
-            discord_cost: discord_cost,
-            discord_count: discord_count,
-            pc_cost: pc_cost,
-            pc_count: pc_count,
-            limp_cost: limp_cost,
-            limp_count: limp_count,
-            selected_cursor: localStorage.getItem("selectedCursor") || "none",
-            dark_mode: document.body.classList.contains("dark-mode"),
-        }).catch(function (err) {
-            console.error("Cloud save failed:", err);
-        });
+    saveGameToCloud({
+        memes: memes,
+        mps: mps,
+        mpc: mpc,
+        potato: potato,
+        potato_cost: potato_cost,
+        meme_cost: meme_cost,
+        meme_count: meme_count,
+        skill_cost: skill_cost,
+        skill_count: skill_count,
+        discord_cost: discord_cost,
+        discord_count: discord_count,
+        pc_cost: pc_cost,
+        pc_count: pc_count,
+        limp_cost: limp_cost,
+        limp_count: limp_count,
+        selected_cursor: localStorage.getItem("selectedCursor") || "none",
+        dark_mode: document.body.classList.contains("dark-mode"),
+    }).catch(function (err) {
+        console.error("Cloud save failed:", err);
+    });
+}
+
+// Wrapper for the manual Save button in Settings — same as saveGame(),
+// but explains itself instead of silently doing nothing when logged out.
+function manual_save_click() {
+    if (typeof currentUser === "undefined" || !currentUser) {
+        alert("Create an account to save your progress! Without one, your game will reset when you reload the page.");
+        return;
     }
+    saveGame();
+    save_changes();
 }
 
 
@@ -332,7 +350,11 @@ try {
     console.error("loadGame() failed:", err);
 }
 function confirmWipeSave() {
-    showConfirmationPopup();
+    showConfirmationPopup(
+        "Are you sure you want to wipe your save data? This action cannot be undone.",
+        "Yes, Wipe Data",
+        wipeSaveData
+    );
 }
 
 
@@ -380,14 +402,26 @@ function wipeSaveData() {
 }
 // Add these functions at the end of your JavaScript code
 
-function showConfirmationPopup() {
+var confirmationCallback = null;
+
+function showConfirmationPopup(text, confirmLabel, callback) {
+    document.getElementById('confirmation-popup-text').innerText = text || "Are you sure?";
+    document.getElementById('confirmation-popup-confirm-btn').innerText = confirmLabel || "Yes";
+    confirmationCallback = callback;
     var confirmationPopup = document.getElementById('confirmation-popup');
     confirmationPopup.style.display = 'block';
+}
+
+function runConfirmationCallback() {
+    var cb = confirmationCallback;
+    closeConfirmationPopup();
+    if (typeof cb === "function") cb();
 }
 
 function closeConfirmationPopup() {
     var confirmationPopup = document.getElementById('confirmation-popup');
     confirmationPopup.style.display = 'none';
+    confirmationCallback = null;
 }
 function changeCursor() {
     var selectedCursor = document.getElementById("cursors").value;
@@ -439,6 +473,20 @@ function abbreviateNumber(number) {
 // is restored on page load). Overwrites local state with their cloud save.
 window.onGameLoaded = function (save) {
     if (!save) return;
+
+    // If localStorage holds a save newer than what's actually in the
+    // cloud, that almost always means a previous cloud save didn't
+    // finish (e.g. the tab closed mid-request) — not that local progress
+    // should be thrown away. In that case, keep what's already loaded
+    // in memory/localStorage and push it back up to resync the cloud,
+    // instead of overwriting it with the stale cloud copy.
+    var localUpdatedAt = parseInt(localStorage.getItem("updatedAt")) || 0;
+    var cloudUpdatedAt = save.updated_at ? new Date(save.updated_at).getTime() : 0;
+    if (localUpdatedAt > cloudUpdatedAt) {
+        saveGame();
+        cancel_login();
+        return;
+    }
 
     memes = Number(save.memes) || 0;
     mps = Number(save.mps) || 0;
@@ -504,6 +552,12 @@ if (loginForm) {
 
         if (!username) {
             statusEl.textContent = "Please enter a username.";
+            statusEl.style.display = "block";
+            return;
+        }
+
+        if (isSignupMode && !/^[A-Za-z0-9_ ]{3,20}$/.test(username)) {
+            statusEl.textContent = "Username must be 3-20 characters: letters, numbers, spaces, or underscores only.";
             statusEl.style.display = "block";
             return;
         }
@@ -576,7 +630,17 @@ function close_chat() {
 function appendChatMessage(msg) {
     var list = document.getElementById("chat-messages");
     var line = document.createElement("div");
-    line.innerHTML = "<b>" + msg.username + ":</b> " + msg.content;
+
+    var nameLink = document.createElement("span");
+    nameLink.className = "profile-link";
+    nameLink.textContent = msg.username;
+    nameLink.addEventListener("click", function () {
+        open_profile(msg.username);
+    });
+
+    line.appendChild(nameLink);
+    line.appendChild(document.createTextNode(": " + msg.content));
+
     list.appendChild(line);
     list.scrollTop = list.scrollHeight;
 }
@@ -614,7 +678,23 @@ function open_leaderboard() {
         list.innerHTML = "";
         rows.forEach(function (row, i) {
             var line = document.createElement("div");
-            line.innerText = (i + 1) + ". " + row.username + " — " + abbreviateNumber(Number(row.memes)) + " memes";
+
+            var rank = document.createElement("span");
+            rank.textContent = (i + 1) + ". ";
+
+            var nameLink = document.createElement("span");
+            nameLink.className = "profile-link";
+            nameLink.textContent = row.username;
+            nameLink.addEventListener("click", function () {
+                open_profile(row.username);
+            });
+
+            var score = document.createElement("span");
+            score.textContent = " — " + abbreviateNumber(Number(row.memes)) + " memes";
+
+            line.appendChild(rank);
+            line.appendChild(nameLink);
+            line.appendChild(score);
             list.appendChild(line);
         });
     });
@@ -703,7 +783,11 @@ function open_people_list() {
             }
             rows.forEach(function (row) {
                 var line = document.createElement("div");
-                line.innerText = row.username;
+                line.className = "profile-link";
+                line.textContent = row.username;
+                line.addEventListener("click", function () {
+                    open_profile(row.username);
+                });
                 list.appendChild(line);
             });
         })
@@ -715,4 +799,444 @@ function open_people_list() {
 function close_people_list() {
     document.getElementById("people-list-panel").style.display = "none";
     document.getElementById("overlay").style.display = "none";
+}
+
+// --- Profile ---
+
+var viewingOwnProfile = false;
+var selectedEditAvatar = "🐸";
+var DEFAULT_BIO_PLACEHOLDER_SELF = "Add a bio to tell people about yourself.";
+var DEFAULT_BIO_PLACEHOLDER_OTHER = "This player hasn't written a bio yet.";
+
+function get_my_username() {
+    return currentUser && currentUser.user_metadata && currentUser.user_metadata.username;
+}
+
+function open_own_profile() {
+    if (!currentUser) {
+        open_login();
+        return;
+    }
+    var username = get_my_username() || document.getElementById("account-btn-label").innerText;
+    open_profile(username);
+}
+
+function open_profile(username) {
+    document.getElementById("profile-panel").style.display = "block";
+    document.getElementById("overlay").style.display = "block";
+    document.getElementById("profile-view").style.display = "block";
+    document.getElementById("profile-edit").style.display = "none";
+
+    document.getElementById("profile-username").innerText = username;
+    document.getElementById("profile-avatar").innerText = "…";
+    document.getElementById("profile-bio").innerText = "";
+    document.getElementById("profile-memes").innerText = "0";
+    var statusEl = document.getElementById("profile-status");
+    statusEl.style.display = "none";
+
+    var myUsername = get_my_username();
+    viewingOwnProfile = !!(myUsername && myUsername.toLowerCase() === username.toLowerCase());
+    document.getElementById("profile-edit-btn").style.display = viewingOwnProfile ? "inline-block" : "none";
+
+    if (typeof getProfile !== "function") {
+        statusEl.innerText = "Supabase isn't loaded. Check the console for details.";
+        statusEl.style.display = "block";
+        return;
+    }
+
+    getProfile(username)
+        .then(function (profile) {
+            if (!profile) {
+                document.getElementById("profile-bio").innerText = "This player couldn't be found.";
+                document.getElementById("profile-avatar").innerText = "❔";
+                return;
+            }
+            document.getElementById("profile-username").innerText = profile.username;
+            document.getElementById("profile-avatar").innerText = profile.avatar_emoji || "🐸";
+            document.getElementById("profile-bio").innerText =
+                profile.bio || (viewingOwnProfile ? DEFAULT_BIO_PLACEHOLDER_SELF : DEFAULT_BIO_PLACEHOLDER_OTHER);
+            document.getElementById("profile-memes").innerText = abbreviateNumber(Number(profile.memes) || 0);
+        })
+        .catch(function (err) {
+            statusEl.innerText = err.message;
+            statusEl.style.display = "block";
+        });
+}
+
+function close_profile() {
+    document.getElementById("profile-panel").style.display = "none";
+    document.getElementById("overlay").style.display = "none";
+}
+
+function enter_profile_edit_mode() {
+    var currentBioText = document.getElementById("profile-bio").innerText;
+    var isPlaceholder = currentBioText === DEFAULT_BIO_PLACEHOLDER_SELF || currentBioText === DEFAULT_BIO_PLACEHOLDER_OTHER;
+
+    selectedEditAvatar = document.getElementById("profile-avatar").innerText;
+    document.getElementById("profile-bio-input").value = isPlaceholder ? "" : currentBioText;
+    highlight_selected_avatar();
+
+    document.getElementById("profile-view").style.display = "none";
+    document.getElementById("profile-edit").style.display = "block";
+}
+
+function cancel_profile_edit() {
+    document.getElementById("profile-edit").style.display = "none";
+    document.getElementById("profile-view").style.display = "block";
+}
+
+function select_avatar(emoji) {
+    selectedEditAvatar = emoji;
+    highlight_selected_avatar();
+}
+
+function highlight_selected_avatar() {
+    var options = document.querySelectorAll("#emoji-picker .emoji-option");
+    for (var i = 0; i < options.length; i++) {
+        var btn = options[i];
+        if (btn.getAttribute("data-emoji") === selectedEditAvatar) {
+            btn.classList.add("selected");
+        } else {
+            btn.classList.remove("selected");
+        }
+    }
+}
+
+function save_profile_edits() {
+    var bio = document.getElementById("profile-bio-input").value.trim();
+    var statusEl = document.getElementById("profile-edit-status");
+    statusEl.style.display = "none";
+
+    if (typeof updateProfile !== "function") {
+        statusEl.innerText = "Supabase isn't loaded. Check the console for details.";
+        statusEl.style.display = "block";
+        return;
+    }
+
+    updateProfile({ bio: bio, avatar_emoji: selectedEditAvatar })
+        .then(function () {
+            document.getElementById("profile-bio").innerText = bio || DEFAULT_BIO_PLACEHOLDER_SELF;
+            document.getElementById("profile-avatar").innerText = selectedEditAvatar;
+            cancel_profile_edit();
+        })
+        .catch(function (err) {
+            statusEl.innerText = err.message;
+            statusEl.style.display = "block";
+        });
+}
+
+// Wire up the emoji picker buttons once at load
+try {
+    var emojiButtons = document.querySelectorAll("#emoji-picker .emoji-option");
+    for (var e = 0; e < emojiButtons.length; e++) {
+        (function (btn) {
+            btn.addEventListener("click", function () {
+                select_avatar(btn.getAttribute("data-emoji"));
+            });
+        })(emojiButtons[e]);
+    }
+} catch (err) {
+    console.error("Emoji picker setup failed:", err);
+}
+
+// --- Friends ---
+
+function require_login_for_socials(panelName) {
+    if (typeof currentUser === "undefined" || !currentUser) {
+        alert("Log in to use " + panelName + ".");
+        return true;
+    }
+    if (typeof sendFriendRequest !== "function") {
+        alert("Supabase isn't loaded. Check the console for details.");
+        return true;
+    }
+    return false;
+}
+
+function open_friends() {
+    if (require_login_for_socials("Friends")) return;
+    document.getElementById("friends-panel").style.display = "block";
+    document.getElementById("overlay").style.display = "block";
+    refresh_friends_panel();
+}
+
+function close_friends() {
+    document.getElementById("friends-panel").style.display = "none";
+    document.getElementById("overlay").style.display = "none";
+}
+
+function build_social_row(entry, actions) {
+    var row = document.createElement("div");
+    row.className = "social-row";
+
+    var left = document.createElement("span");
+    left.className = "profile-link";
+    left.textContent = (entry.avatar_emoji ? entry.avatar_emoji + " " : "") + entry.username;
+    left.addEventListener("click", function () {
+        open_profile(entry.username);
+    });
+    row.appendChild(left);
+
+    var actionsWrap = document.createElement("span");
+    actionsWrap.className = "social-row-actions";
+    actions.forEach(function (action) {
+        var btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = action.className || "cancelbtn";
+        btn.textContent = action.label;
+        btn.addEventListener("click", action.onClick);
+        actionsWrap.appendChild(btn);
+    });
+    row.appendChild(actionsWrap);
+
+    return row;
+}
+
+function fill_social_list(elementId, items, emptyMessage, rowBuilder) {
+    var container = document.getElementById(elementId);
+    container.innerHTML = "";
+    if (!items.length) {
+        var empty = document.createElement("p");
+        empty.className = "social-empty";
+        empty.textContent = emptyMessage;
+        container.appendChild(empty);
+        return;
+    }
+    items.forEach(function (item) {
+        container.appendChild(rowBuilder(item));
+    });
+}
+
+function refresh_friends_panel() {
+    getIncomingFriendRequests()
+        .then(function (requests) {
+            fill_social_list("friend-requests-list", requests, "No pending requests.", function (req) {
+                return build_social_row(req, [
+                    { label: "Accept", className: "login_button", onClick: function () { respond_to_request(req.id, true); } },
+                    { label: "Decline", className: "cancelbtn", onClick: function () { respond_to_request(req.id, false); } },
+                ]);
+            });
+        })
+        .catch(function (err) { console.error(err); });
+
+    getSentFriendRequests()
+        .then(function (sent) {
+            fill_social_list("friend-sent-list", sent, "No sent requests.", function (req) {
+                return build_social_row(req, [
+                    { label: "Cancel", className: "cancelbtn", onClick: function () { cancel_sent_request(req.id); } },
+                ]);
+            });
+        })
+        .catch(function (err) { console.error(err); });
+
+    getFriendsList()
+        .then(function (friends) {
+            fill_social_list("friends-list", friends, "No friends yet.", function (friend) {
+                return build_social_row(friend, [
+                    { label: "Remove", className: "cancelbtn", onClick: function () { remove_friend(friend.id); } },
+                ]);
+            });
+        })
+        .catch(function (err) { console.error(err); });
+}
+
+function send_friend_request() {
+    var input = document.getElementById("friend-username-input");
+    var statusEl = document.getElementById("friend-add-status");
+    var username = input.value.trim();
+    statusEl.style.display = "none";
+
+    if (!username) return;
+
+    sendFriendRequest(username)
+        .then(function (result) {
+            statusEl.textContent = result.autoAccepted
+                ? "You're now friends with " + result.username + "!"
+                : "Friend request sent to " + result.username + ".";
+            statusEl.style.display = "block";
+            input.value = "";
+            refresh_friends_panel();
+        })
+        .catch(function (err) {
+            statusEl.textContent = err.message;
+            statusEl.style.display = "block";
+        });
+}
+
+function respond_to_request(requestId, accept) {
+    var action = accept ? acceptFriendRequest(requestId) : declineOrCancelFriendRequest(requestId);
+    action.then(refresh_friends_panel).catch(function (err) { alert(err.message); });
+}
+
+function cancel_sent_request(requestId) {
+    declineOrCancelFriendRequest(requestId).then(refresh_friends_panel).catch(function (err) { alert(err.message); });
+}
+
+function remove_friend(friendshipId) {
+    removeFriend(friendshipId).then(refresh_friends_panel).catch(function (err) { alert(err.message); });
+}
+
+// --- Clans ---
+
+function open_clans() {
+    if (require_login_for_socials("Clans")) return;
+    document.getElementById("clans-panel").style.display = "block";
+    document.getElementById("overlay").style.display = "block";
+    refresh_clans_panel();
+}
+
+function close_clans() {
+    document.getElementById("clans-panel").style.display = "none";
+    document.getElementById("overlay").style.display = "none";
+}
+
+function refresh_clans_panel() {
+    getMyClanId()
+        .then(function (clanId) {
+            if (clanId) {
+                document.getElementById("clan-browse-view").style.display = "none";
+                document.getElementById("clan-mine-view").style.display = "block";
+                render_my_clan(clanId);
+            } else {
+                document.getElementById("clan-mine-view").style.display = "none";
+                document.getElementById("clan-browse-view").style.display = "block";
+                render_clan_browse_list();
+            }
+        })
+        .catch(function (err) {
+            console.error(err);
+        });
+}
+
+function render_clan_browse_list() {
+    getClanList()
+        .then(function (clans) {
+            var container = document.getElementById("clan-browse-list");
+            container.innerHTML = "";
+            if (!clans.length) {
+                var empty = document.createElement("p");
+                empty.className = "social-empty";
+                empty.textContent = "No clans yet — start one!";
+                container.appendChild(empty);
+                return;
+            }
+            clans.forEach(function (clan) {
+                var row = document.createElement("div");
+                row.className = "social-row";
+
+                var left = document.createElement("span");
+                left.textContent = clan.name + (clan.tag ? " [" + clan.tag + "]" : "") + " · " + clan.member_count + " members";
+                row.appendChild(left);
+
+                var joinBtn = document.createElement("button");
+                joinBtn.type = "button";
+                joinBtn.className = "login_button";
+                joinBtn.textContent = "Join";
+                joinBtn.addEventListener("click", function () {
+                    joinClan(clan.id).then(refresh_clans_panel).catch(function (err) { alert(err.message); });
+                });
+                row.appendChild(joinBtn);
+
+                container.appendChild(row);
+            });
+        })
+        .catch(function (err) {
+            console.error(err);
+        });
+}
+
+function create_clan() {
+    var nameInput = document.getElementById("clan-name-input");
+    var tagInput = document.getElementById("clan-tag-input");
+    var statusEl = document.getElementById("clan-create-status");
+    statusEl.style.display = "none";
+
+    var name = nameInput.value.trim();
+    if (name.length < 2) {
+        statusEl.textContent = "Clan name must be at least 2 characters.";
+        statusEl.style.display = "block";
+        return;
+    }
+
+    createClan(name, tagInput.value.trim())
+        .then(function () {
+            nameInput.value = "";
+            tagInput.value = "";
+            refresh_clans_panel();
+        })
+        .catch(function (err) {
+            statusEl.textContent = err.message;
+            statusEl.style.display = "block";
+        });
+}
+
+var currentClanId = null;
+var currentClanIsOwner = false;
+
+function render_my_clan(clanId) {
+    currentClanId = clanId;
+    var statusEl = document.getElementById("clan-mine-status");
+    statusEl.style.display = "none";
+
+    getClan(clanId)
+        .then(function (clan) {
+            if (!clan) {
+                // The clan was deleted out from under us; drop back to browse view.
+                refresh_clans_panel();
+                return;
+            }
+            document.getElementById("clan-mine-name").innerText = clan.name;
+            document.getElementById("clan-mine-tag").innerText = clan.tag ? "[" + clan.tag + "]" : "";
+            document.getElementById("clan-mine-bio").innerText = clan.bio || "No description yet.";
+
+            currentClanIsOwner = currentUser && clan.owner_id === currentUser.id;
+            document.getElementById("clan-owner-controls").style.display = currentClanIsOwner ? "block" : "none";
+            if (currentClanIsOwner) {
+                document.getElementById("clan-bio-input").value = clan.bio || "";
+            }
+
+            return getClanMembers(clanId);
+        })
+        .then(function (members) {
+            if (!members) return;
+            fill_social_list("clan-mine-members", members, "No members.", function (member) {
+                return build_social_row(
+                    { username: member.username, avatar_emoji: member.avatar_emoji },
+                    []
+                );
+            });
+        })
+        .catch(function (err) {
+            statusEl.textContent = err.message;
+            statusEl.style.display = "block";
+        });
+}
+
+function save_clan_bio() {
+    var bio = document.getElementById("clan-bio-input").value.trim();
+    var statusEl = document.getElementById("clan-mine-status");
+    updateClanBio(currentClanId, bio)
+        .then(function () {
+            document.getElementById("clan-mine-bio").innerText = bio || "No description yet.";
+            statusEl.textContent = "Saved.";
+            statusEl.style.display = "block";
+        })
+        .catch(function (err) {
+            statusEl.textContent = err.message;
+            statusEl.style.display = "block";
+        });
+}
+
+function confirm_delete_clan() {
+    showConfirmationPopup(
+        "Delete this clan? All members will be removed from it. This cannot be undone.",
+        "Yes, Delete Clan",
+        function () {
+            deleteClan(currentClanId).then(refresh_clans_panel).catch(function (err) { alert(err.message); });
+        }
+    );
+}
+
+function leave_clan() {
+    leaveClan().then(refresh_clans_panel).catch(function (err) { alert(err.message); });
 }

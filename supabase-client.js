@@ -158,6 +158,30 @@ async function getAllPlayers(limit = 200) {
   return data;
 }
 
+// --- Profiles ---
+
+async function getProfile(username) {
+  requireSupabase();
+  const { data, error } = await sbClient
+    .from("leaderboard")
+    .select("username, memes, bio, avatar_emoji")
+    .ilike("username", username)
+    .limit(1)
+    .maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
+async function updateProfile({ bio, avatar_emoji }) {
+  requireSupabase();
+  if (!currentUser) throw new Error("Not logged in");
+  const { error } = await sbClient
+    .from("saves")
+    .update({ bio, avatar_emoji, updated_at: new Date().toISOString() })
+    .eq("user_id", currentUser.id);
+  if (error) throw error;
+}
+
 // --- Chat ---
 
 async function sendChatMessage(content) {
@@ -192,4 +216,232 @@ function subscribeToChat(onMessage) {
     )
     .subscribe();
   return () => sbClient.removeChannel(channel);
+}
+
+// --- Friends ---
+
+async function lookupUserIdByUsername(username) {
+  const { data, error } = await sbClient
+    .from("leaderboard")
+    .select("user_id, username")
+    .ilike("username", username)
+    .limit(1)
+    .maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
+async function sendFriendRequest(username) {
+  requireSupabase();
+  if (!currentUser) throw new Error("Not logged in");
+
+  const target = await lookupUserIdByUsername(username);
+  if (!target) throw new Error("No player with that username.");
+  if (target.user_id === currentUser.id) throw new Error("You can't friend yourself.");
+
+  // If they already sent *me* a pending request, accept it instead of
+  // creating a duplicate, mismatched row.
+  const { data: reverseRow, error: reverseErr } = await sbClient
+    .from("friendships")
+    .select("id, status")
+    .eq("requester_id", target.user_id)
+    .eq("addressee_id", currentUser.id)
+    .maybeSingle();
+  if (reverseErr) throw reverseErr;
+
+  if (reverseRow) {
+    if (reverseRow.status === "accepted") throw new Error("You're already friends with " + target.username + ".");
+    const { error } = await sbClient.from("friendships").update({ status: "accepted" }).eq("id", reverseRow.id);
+    if (error) throw error;
+    return { autoAccepted: true, username: target.username };
+  }
+
+  const { error } = await sbClient
+    .from("friendships")
+    .insert({ requester_id: currentUser.id, addressee_id: target.user_id, status: "pending" });
+  if (error) {
+    if (error.code === "23505") throw new Error("You already sent " + target.username + " a request.");
+    throw error;
+  }
+  return { autoAccepted: false, username: target.username };
+}
+
+async function getIncomingFriendRequests() {
+  requireSupabase();
+  if (!currentUser) return [];
+  const { data, error } = await sbClient
+    .from("friendships")
+    .select("id, requester_id")
+    .eq("addressee_id", currentUser.id)
+    .eq("status", "pending");
+  if (error) throw error;
+  return attachUsernames(data, "requester_id");
+}
+
+async function getSentFriendRequests() {
+  requireSupabase();
+  if (!currentUser) return [];
+  const { data, error } = await sbClient
+    .from("friendships")
+    .select("id, addressee_id")
+    .eq("requester_id", currentUser.id)
+    .eq("status", "pending");
+  if (error) throw error;
+  return attachUsernames(data, "addressee_id");
+}
+
+async function getFriendsList() {
+  requireSupabase();
+  if (!currentUser) return [];
+  const { data, error } = await sbClient
+    .from("friendships")
+    .select("id, requester_id, addressee_id")
+    .eq("status", "accepted")
+    .or(`requester_id.eq.${currentUser.id},addressee_id.eq.${currentUser.id}`);
+  if (error) throw error;
+
+  const rows = data.map((row) => ({
+    id: row.id,
+    other_id: row.requester_id === currentUser.id ? row.addressee_id : row.requester_id,
+  }));
+  return attachUsernames(rows, "other_id");
+}
+
+// Given rows containing a user_id-holding field, look up display info
+// (username/avatar) for each of those users in one batched query.
+async function attachUsernames(rows, idField) {
+  if (!rows.length) return [];
+  const ids = [...new Set(rows.map((r) => r[idField]))];
+  const { data: profiles, error } = await sbClient
+    .from("leaderboard")
+    .select("user_id, username, avatar_emoji")
+    .in("user_id", ids);
+  if (error) throw error;
+
+  const byId = {};
+  profiles.forEach((p) => (byId[p.user_id] = p));
+
+  return rows.map((row) => ({
+    ...row,
+    username: byId[row[idField]] ? byId[row[idField]].username : "Unknown",
+    avatar_emoji: byId[row[idField]] ? byId[row[idField]].avatar_emoji : "❔",
+  }));
+}
+
+async function acceptFriendRequest(requestId) {
+  requireSupabase();
+  const { error } = await sbClient
+    .from("friendships")
+    .update({ status: "accepted" })
+    .eq("id", requestId)
+    .eq("addressee_id", currentUser.id);
+  if (error) throw error;
+}
+
+async function declineOrCancelFriendRequest(requestId) {
+  requireSupabase();
+  const { error } = await sbClient
+    .from("friendships")
+    .delete()
+    .eq("id", requestId);
+  if (error) throw error;
+}
+
+async function removeFriend(friendshipId) {
+  return declineOrCancelFriendRequest(friendshipId);
+}
+
+// --- Clans ---
+
+async function getClanList(limit = 50) {
+  requireSupabase();
+  const { data: clans, error } = await sbClient
+    .from("clans")
+    .select("id, name, tag, bio, owner_id")
+    .order("name", { ascending: true })
+    .limit(limit);
+  if (error) throw error;
+
+  const { data: counts, error: countErr } = await sbClient.from("clan_member_counts").select("clan_id, member_count");
+  if (countErr) throw countErr;
+  const countById = {};
+  counts.forEach((c) => (countById[c.clan_id] = c.member_count));
+
+  return clans.map((c) => ({ ...c, member_count: countById[c.id] || 0 }));
+}
+
+async function getMyClanId() {
+  requireSupabase();
+  if (!currentUser) return null;
+  const { data, error } = await sbClient
+    .from("saves")
+    .select("clan_id")
+    .eq("user_id", currentUser.id)
+    .maybeSingle();
+  if (error) throw error;
+  return data ? data.clan_id : null;
+}
+
+async function getClan(clanId) {
+  requireSupabase();
+  const { data, error } = await sbClient
+    .from("clans")
+    .select("id, name, tag, bio, owner_id")
+    .eq("id", clanId)
+    .maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
+async function getClanMembers(clanId) {
+  requireSupabase();
+  const { data, error } = await sbClient
+    .from("leaderboard")
+    .select("username, memes, avatar_emoji")
+    .eq("clan_id", clanId)
+    .order("memes", { ascending: false });
+  if (error) throw error;
+  return data;
+}
+
+async function createClan(name, tag) {
+  requireSupabase();
+  if (!currentUser) throw new Error("Not logged in");
+  const { data, error } = await sbClient
+    .from("clans")
+    .insert({ name: name.trim(), tag: tag.trim() || null, owner_id: currentUser.id })
+    .select()
+    .single();
+  if (error) {
+    if (error.code === "23505") throw new Error("A clan with that name already exists.");
+    throw error;
+  }
+  await sbClient.from("saves").update({ clan_id: data.id }).eq("user_id", currentUser.id);
+  return data;
+}
+
+async function joinClan(clanId) {
+  requireSupabase();
+  if (!currentUser) throw new Error("Not logged in");
+  const { error } = await sbClient.from("saves").update({ clan_id: clanId }).eq("user_id", currentUser.id);
+  if (error) throw error;
+}
+
+async function leaveClan() {
+  requireSupabase();
+  if (!currentUser) throw new Error("Not logged in");
+  const { error } = await sbClient.from("saves").update({ clan_id: null }).eq("user_id", currentUser.id);
+  if (error) throw error;
+}
+
+async function updateClanBio(clanId, bio) {
+  requireSupabase();
+  const { error } = await sbClient.from("clans").update({ bio }).eq("id", clanId).eq("owner_id", currentUser.id);
+  if (error) throw error;
+}
+
+async function deleteClan(clanId) {
+  requireSupabase();
+  const { error } = await sbClient.from("clans").delete().eq("id", clanId).eq("owner_id", currentUser.id);
+  if (error) throw error;
 }
