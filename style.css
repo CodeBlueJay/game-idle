@@ -793,12 +793,21 @@ label {
 #people-list .profile-link {
   font-weight: 500;
   color: var(--text);
-  display: block;
 }
 
 #people-list .profile-link:hover {
   color: var(--accent);
   text-decoration: none;
+}
+
+.clan-tag-inline {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--accent);
+  background: rgba(139, 108, 255, 0.12);
+  border-radius: 4px;
+  padding: 1px 5px;
 }
 
 /* --- Profile --- */
@@ -1027,6 +1036,11 @@ label {
 #snackbar.show, #savechanges.show {
   visibility: visible;
   animation: fadein 0.4s, fadeout 0.4s 2.6s;
+}
+
+#savechanges.error {
+  border-color: var(--danger);
+  color: var(--danger);
 }
 
 @keyframes fadein {

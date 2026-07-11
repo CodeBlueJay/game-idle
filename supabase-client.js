@@ -17,7 +17,16 @@ try {
   if (SUPABASE_URL.includes("YOUR-PROJECT-REF") || SUPABASE_ANON_KEY.includes("YOUR-ANON-PUBLIC-KEY")) {
     throw new Error("Supabase is not configured yet. Replace SUPABASE_URL and SUPABASE_ANON_KEY at the top of supabase-client.js with your project's real values.");
   }
-  sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    global: {
+      // Regular fetch() requests get killed when a tab closes or
+      // navigates away, even if they're mid-flight. keepalive lets the
+      // browser finish small requests (our save payload is well under
+      // the ~64KB keepalive limit) in the background after the page is
+      // gone, which matters a lot for save-on-leave reliability.
+      fetch: (url, options = {}) => fetch(url, { ...options, keepalive: true }),
+    },
+  });
 } catch (err) {
   console.error(err.message);
 }
@@ -140,7 +149,7 @@ async function getLeaderboard(limit = 20) {
   requireSupabase();
   const { data, error } = await sbClient
     .from("leaderboard")
-    .select("username, memes")
+    .select("username, memes, clan_tag")
     .order("memes", { ascending: false })
     .limit(limit);
   if (error) throw error;
@@ -151,7 +160,7 @@ async function getAllPlayers(limit = 200) {
   requireSupabase();
   const { data, error } = await sbClient
     .from("leaderboard")
-    .select("username")
+    .select("username, clan_tag")
     .order("username", { ascending: true })
     .limit(limit);
   if (error) throw error;
@@ -164,7 +173,7 @@ async function getProfile(username) {
   requireSupabase();
   const { data, error } = await sbClient
     .from("leaderboard")
-    .select("username, memes, bio, avatar_emoji")
+    .select("username, memes, bio, avatar_emoji, clan_tag")
     .ilike("username", username)
     .limit(1)
     .maybeSingle();
@@ -194,6 +203,34 @@ async function sendChatMessage(content) {
   if (error) throw error;
 }
 
+// Chat messages don't store clan info directly (a sender's clan can
+// change after the message was sent), so tags are looked up separately
+// and merged in at render time rather than baked into the messages table.
+async function attachClanTagsByUsername(rows) {
+  if (!rows.length) return rows;
+  const usernames = [...new Set(rows.map((r) => r.username))];
+  const { data: profiles, error } = await sbClient
+    .from("leaderboard")
+    .select("username, clan_tag")
+    .in("username", usernames);
+  if (error) throw error;
+  const tagByUsername = {};
+  profiles.forEach((p) => (tagByUsername[p.username] = p.clan_tag));
+  return rows.map((row) => ({ ...row, clan_tag: tagByUsername[row.username] || null }));
+}
+
+async function getClanTagForUsername(username) {
+  requireSupabase();
+  const { data, error } = await sbClient
+    .from("leaderboard")
+    .select("clan_tag")
+    .ilike("username", username)
+    .limit(1)
+    .maybeSingle();
+  if (error) throw error;
+  return data ? data.clan_tag : null;
+}
+
 async function loadRecentMessages(limit = 50) {
   requireSupabase();
   const { data, error } = await sbClient
@@ -202,7 +239,7 @@ async function loadRecentMessages(limit = 50) {
     .order("created_at", { ascending: false })
     .limit(limit);
   if (error) throw error;
-  return data.reverse();
+  return attachClanTagsByUsername(data.reverse());
 }
 
 function subscribeToChat(onMessage) {
@@ -314,7 +351,7 @@ async function attachUsernames(rows, idField) {
   const ids = [...new Set(rows.map((r) => r[idField]))];
   const { data: profiles, error } = await sbClient
     .from("leaderboard")
-    .select("user_id, username, avatar_emoji")
+    .select("user_id, username, avatar_emoji, clan_tag")
     .in("user_id", ids);
   if (error) throw error;
 
@@ -325,6 +362,7 @@ async function attachUsernames(rows, idField) {
     ...row,
     username: byId[row[idField]] ? byId[row[idField]].username : "Unknown",
     avatar_emoji: byId[row[idField]] ? byId[row[idField]].avatar_emoji : "❔",
+    clan_tag: byId[row[idField]] ? byId[row[idField]].clan_tag : null,
   }));
 }
 

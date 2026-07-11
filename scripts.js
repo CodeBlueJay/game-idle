@@ -150,10 +150,12 @@ function close_settings() {
 	document.getElementById("settings-menu").style.display="none";
 	document.getElementById("overlay").style.display="none";
 }
-function save_changes() {
+function save_changes(message, isError) {
 	var x = document.getElementById("savechanges");
-  	x.className = "show";
-  	setTimeout(function(){ x.className = x.className.replace("show", ""); }, 3000);
+	x.innerText = message || "Changes Saved!";
+	x.classList.toggle("error", !!isError);
+  	x.className += " show";
+  	setTimeout(function(){ x.className = x.className.replace(" show", ""); }, 3000);
 }
 function start_buttons() {
 	update_buy_buttons();
@@ -269,7 +271,6 @@ function saveGame() {
     localStorage.setItem("pc_count", pc_count);
     localStorage.setItem("limp_cost", limp_cost);
     localStorage.setItem("limp_count", limp_count);
-    localStorage.setItem("selectedCursor", selectedCursor);
     localStorage.setItem("darkMode", document.body.classList.contains("dark-mode"));
     localStorage.setItem("updatedAt", nowTimestamp.toString());
 
@@ -289,7 +290,6 @@ function saveGame() {
         pc_count: pc_count,
         limp_cost: limp_cost,
         limp_count: limp_count,
-        selected_cursor: localStorage.getItem("selectedCursor") || "none",
         dark_mode: document.body.classList.contains("dark-mode"),
     }).then(function () {
         save_changes(); // "Changes Saved!" toast — fires on every successful
@@ -298,6 +298,7 @@ function saveGame() {
                          // confirmation rather than an optimistic guess.
     }).catch(function (err) {
         console.error("Cloud save failed:", err);
+        save_changes("Save failed — " + err.message, true);
     });
 }
 
@@ -347,12 +348,6 @@ function loadGame() {
     document.getElementById("limp_cost").innerText = limp_cost;
     document.getElementById("limp_count").innerText = formatCount(limp_count);
     update_buy_buttons();
-
-    var savedCursor = localStorage.getItem("cursor");
-    if (savedCursor) {
-        document.getElementById("cursors").value = savedCursor;
-        changeCursor(); // Apply the saved cursor immediately
-    }
 
     var darkModeStatus = localStorage.getItem("darkMode") === "true";
     if (darkModeStatus) {
@@ -445,8 +440,6 @@ function closeConfirmationPopup() {
 function changeCursor() {
     var selectedCursor = document.getElementById("cursors").value;
     document.body.style.cursor = selectedCursor;
-    // Save the selected cursor in local storage
-    localStorage.setItem("selectedCursor", selectedCursor);
 }
 
 try {
@@ -646,6 +639,16 @@ function close_chat() {
     document.getElementById("overlay").style.display = "none";
 }
 
+// Small "[TAG]" badge shown next to a username wherever one is rendered.
+// Returns null (append nothing) if the player isn't in a clan.
+function build_clan_tag_badge(tag) {
+    if (!tag) return null;
+    var badge = document.createElement("span");
+    badge.className = "clan-tag-inline";
+    badge.textContent = "[" + tag + "]";
+    return badge;
+}
+
 function appendChatMessage(msg) {
     var list = document.getElementById("chat-messages");
     var line = document.createElement("div");
@@ -656,8 +659,14 @@ function appendChatMessage(msg) {
     nameLink.addEventListener("click", function () {
         open_profile(msg.username);
     });
-
     line.appendChild(nameLink);
+
+    var tagBadge = build_clan_tag_badge(msg.clan_tag);
+    if (tagBadge) {
+        line.appendChild(document.createTextNode(" "));
+        line.appendChild(tagBadge);
+    }
+
     line.appendChild(document.createTextNode(": " + msg.content));
 
     list.appendChild(line);
@@ -682,7 +691,18 @@ function submit_chat_message() {
 
 // Live updates for everyone with the chat open
 subscribeToChat(function (msg) {
-    if (document.getElementById("chat-panel").style.display === "block") {
+    if (document.getElementById("chat-panel").style.display !== "block") return;
+
+    if (typeof getClanTagForUsername === "function") {
+        getClanTagForUsername(msg.username)
+            .then(function (tag) {
+                msg.clan_tag = tag;
+                appendChatMessage(msg);
+            })
+            .catch(function () {
+                appendChatMessage(msg);
+            });
+    } else {
         appendChatMessage(msg);
     }
 });
@@ -713,6 +733,11 @@ function open_leaderboard() {
 
             line.appendChild(rank);
             line.appendChild(nameLink);
+            var tagBadge = build_clan_tag_badge(row.clan_tag);
+            if (tagBadge) {
+                line.appendChild(document.createTextNode(" "));
+                line.appendChild(tagBadge);
+            }
             line.appendChild(score);
             list.appendChild(line);
         });
@@ -802,11 +827,21 @@ function open_people_list() {
             }
             rows.forEach(function (row) {
                 var line = document.createElement("div");
-                line.className = "profile-link";
-                line.textContent = row.username;
-                line.addEventListener("click", function () {
+
+                var nameSpan = document.createElement("span");
+                nameSpan.className = "profile-link";
+                nameSpan.textContent = row.username;
+                nameSpan.addEventListener("click", function () {
                     open_profile(row.username);
                 });
+                line.appendChild(nameSpan);
+
+                var tagBadge = build_clan_tag_badge(row.clan_tag);
+                if (tagBadge) {
+                    line.appendChild(document.createTextNode(" "));
+                    line.appendChild(tagBadge);
+                }
+
                 list.appendChild(line);
             });
         })
@@ -847,6 +882,7 @@ function open_profile(username) {
     document.getElementById("profile-edit").style.display = "none";
 
     document.getElementById("profile-username").innerText = username;
+    document.getElementById("profile-clan-tag").style.display = "none";
     document.getElementById("profile-avatar").innerText = "…";
     document.getElementById("profile-bio").innerText = "";
     document.getElementById("profile-memes").innerText = "0";
@@ -871,6 +907,13 @@ function open_profile(username) {
                 return;
             }
             document.getElementById("profile-username").innerText = profile.username;
+            var clanTagEl = document.getElementById("profile-clan-tag");
+            if (profile.clan_tag) {
+                clanTagEl.textContent = "[" + profile.clan_tag + "]";
+                clanTagEl.style.display = "inline";
+            } else {
+                clanTagEl.style.display = "none";
+            }
             document.getElementById("profile-avatar").innerText = profile.avatar_emoji || "🐸";
             document.getElementById("profile-bio").innerText =
                 profile.bio || (viewingOwnProfile ? DEFAULT_BIO_PLACEHOLDER_SELF : DEFAULT_BIO_PLACEHOLDER_OTHER);
@@ -995,6 +1038,12 @@ function build_social_row(entry, actions) {
         open_profile(entry.username);
     });
     row.appendChild(left);
+
+    var tagBadge = build_clan_tag_badge(entry.clan_tag);
+    if (tagBadge) {
+        row.appendChild(document.createTextNode(" "));
+        row.appendChild(tagBadge);
+    }
 
     var actionsWrap = document.createElement("span");
     actionsWrap.className = "social-row-actions";
