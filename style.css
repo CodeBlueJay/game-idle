@@ -487,22 +487,6 @@ button.buy:disabled {
   margin-bottom: 8px;
 }
 
-.cursor-menu label {
-  font-size: 13px;
-  color: var(--text-dim);
-}
-
-.cursor-menu select {
-  width: 100%;
-  margin-top: 6px;
-  background: var(--surface-2);
-  color: var(--text);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 10px;
-  font-family: "Inter", sans-serif;
-}
-
 /* .dark-settings / .dark-login classes are still toggled by scripts.js
    for backward compatibility, but the settings/login modals already pull
    from the same CSS variables as the rest of the page, so no separate

@@ -437,16 +437,7 @@ function closeConfirmationPopup() {
     confirmationPopup.style.display = 'none';
     confirmationCallback = null;
 }
-function changeCursor() {
-    var selectedCursor = document.getElementById("cursors").value;
-    document.body.style.cursor = selectedCursor;
-}
 
-try {
-    document.getElementById('cursors').addEventListener('change', changeCursor);
-} catch (err) {
-    console.error("Cursor listener setup failed:", err);
-}
 // Set the autosave interval (e.g., every 5 minutes)
 var autosaveInterval = 5 * 60 * 1000; // 5 minutes in milliseconds
 
