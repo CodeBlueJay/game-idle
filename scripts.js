@@ -44,6 +44,21 @@ setInterval (function() {
 }, 10000) // every 10s — was 0ms (i.e. constantly) before, which is fine for
           // localStorage but would spam Supabase with requests non-stop.
 
+// The 10s interval above leaves a gap: if you switch tabs or close the
+// page in between ticks, whatever progress happened in that window was
+// never saved anywhere. Saving immediately on tab-hide/page-leave closes
+// that gap. visibilitychange covers switching tabs/apps (page stays alive
+// in the background, so the save has time to actually complete);
+// pagehide covers navigating away or closing the tab outright.
+document.addEventListener("visibilitychange", function () {
+    if (document.visibilityState === "hidden") {
+        saveGame();
+    }
+});
+window.addEventListener("pagehide", function () {
+    saveGame();
+});
+
 // Whole numbers only (no decimals) — used for "owned" counts, since
 // fractional/decimal-looking counts (e.g. "3.00") read oddly for something
 // you can only ever own a whole number of.
@@ -276,6 +291,11 @@ function saveGame() {
         limp_count: limp_count,
         selected_cursor: localStorage.getItem("selectedCursor") || "none",
         dark_mode: document.body.classList.contains("dark-mode"),
+    }).then(function () {
+        save_changes(); // "Changes Saved!" toast — fires on every successful
+                         // save (manual or the 10s autosave), not just when
+                         // the Save button is clicked, so it's an honest
+                         // confirmation rather than an optimistic guess.
     }).catch(function (err) {
         console.error("Cloud save failed:", err);
     });
@@ -289,7 +309,6 @@ function manual_save_click() {
         return;
     }
     saveGame();
-    save_changes();
 }
 
 
@@ -836,7 +855,7 @@ function open_profile(username) {
 
     var myUsername = get_my_username();
     viewingOwnProfile = !!(myUsername && myUsername.toLowerCase() === username.toLowerCase());
-    document.getElementById("profile-edit-btn").style.display = viewingOwnProfile ? "inline-block" : "none";
+    document.getElementById("profile-own-actions").style.display = viewingOwnProfile ? "flex" : "none";
 
     if (typeof getProfile !== "function") {
         statusEl.innerText = "Supabase isn't loaded. Check the console for details.";

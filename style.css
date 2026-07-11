@@ -841,6 +841,12 @@ label {
   color: var(--text);
 }
 
+.profile-own-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
 #profile-status,
 #profile-edit-status {
   font-size: 13px;

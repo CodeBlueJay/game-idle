@@ -266,7 +266,10 @@
 			<h2 id="profile-username">Username</h2>
 			<p class="profile-bio" id="profile-bio"></p>
 			<p class="profile-stat">Memes: <b id="profile-memes">0</b></p>
-			<button type="button" class="button" id="profile-edit-btn" onclick="enter_profile_edit_mode()" style="display:none;">Edit Profile</button>
+			<div class="profile-own-actions" id="profile-own-actions" style="display:none;">
+				<button type="button" class="button" id="profile-edit-btn" onclick="enter_profile_edit_mode()">Edit Profile</button>
+				<button type="button" class="cancelbtn" onclick="do_logout(); close_profile();">Log Out</button>
+			</div>
 			<p id="profile-status" style="display:none;"></p>
 		</div>
 
